@@ -1,5 +1,5 @@
 import mongoose from "mongoose";
-
+import bcrypt from "bcrypt"
 
 const userSchema = new mongoose.Schema({
     name: {
@@ -10,19 +10,41 @@ const userSchema = new mongoose.Schema({
     email: {
         type: String,
         required: true,
-        pattern: /\b/,
+        pattern: /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/,
         unique: true,
     },
     password: {
         type: String,
-        required: true,
-        minLength: 6,
+    },
+    picture: {
+        type: String,
+        default: null,
+    },
+    rootFolderId: {
+        type: mongoose.Types.ObjectId,
+        required: true
+    },
+    trems: {
+        type: Boolean,
+        default: false
     }
-},{
-    timestamps : true
+
+}, {
+    timestamps: true,
+})
+
+userSchema.methods.comparePassword = async function (enteredPassword) {
+    return bcrypt.compare(enteredPassword, this.password);
+};
+
+
+userSchema.pre("save", async function () {
+    if (!this.isModified("password")) return
+    this.password = await bcrypt.hash(this.password, 12)
 })
 
 
-const Users = new mongoose.model("user" , userSchema)
+
+const Users = mongoose.model("user", userSchema)
 
 export default Users

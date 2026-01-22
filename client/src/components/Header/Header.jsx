@@ -1,49 +1,40 @@
 import React from 'react'
 import Container from '../container/container'
-import { Cloud } from 'lucide-react'
+import { Bell, Cloud, UserPlus } from 'lucide-react'
 import { Link } from 'react-router-dom'
-import logo from "../../assets/images/logo.png"
+import { userAuth } from '@/contextApi/AuthContext'
+import { IoIosSearch } from "react-icons/io";
+import SideBare from '../Sidebare/SideBare'
 function Header() {
-    const navbar = ["features", "how it works", "integrations", "pricing"]
-    return (
-        <div className=' w-full'>
-            <Container>
-                <header className=' w-full flex justify-between items-center  '>
-                    <div className='  flex items-center group cursor-pointer '>
-                        <div className='   '>
-                            <img className=' w-11 h-11 rounded-md object-cover ' src={logo} alt="" />
-                        </div>
-                        <p className=' font-bold font-plusjakartaSans text-xl ml-2 text-black  '>SynkDive</p>
-                    </div>
-                    <nav>
-                        <ul className=' flex items-center gap-x-4 '>
-                            {navbar.map((data, index) => (
-                                <li key={index} className=' mr-5 relative text-[15px] text-[#4F555C] transition-colors group capitalize hover:text-black  hover:duration-700   font-medium font-inter '>
-                                    <Link>
-                                        {data}
-                                    </Link>
-                                    <span className=' absolute -bottom-1 left-0  w-0 group-hover:w-full transition-all   h-0.5 bg-[#155DFC]'></span>
-                                </li>
 
-                            ))}
-                        </ul>
-                    </nav>
-                    <div className=' flex items-center gap-x-5'>
-                        <button className=' font-medium text-[#4F555C] text-[15px] transition-colors font-inter hover:text-black '>
-                            <Link to={"/signin"}>
-                                Sign In
-                            </Link>
-                        </button>
-                        <div>
-                            <Link to={"/signup"}>
-                                <button className=' font-medium cursor-pointer text-[15px] font-inter ml-4  px-5 py-2 rounded-md bg-[#155DFC] text-white '>
-                                    Get Started
-                                </button>
-                            </Link>
+
+    const { user } = userAuth()
+    console.log(user);
+
+    return (
+        <div className=' fixed top-0 left-65 w-[calc(100%-260px)] bg-white z-10 '>
+            <header className=' w-full px-6 py-4  '>
+                <div className=' w-full flex justify-between  items-center'>
+                    <form className=' w-1/2 border flex items-center px-4 py-1.5  rounded-lg border-[#00000024]  outline-black hover:border-black'>
+                        <span className=' text-gray-500'><IoIosSearch size={21} strokeWidth={4} /></span>
+                        <input type="text" className=' outline-0 w-full  px-2  font-inter     ' placeholder='Search' />
+                    </form>
+                    <div className=' flex gap-x-3 items-center justify-end'>
+                        <button className=' bg-[#d9d4cc3b] flex items-center    rounded-md cursor-pointer  font-bold  px-4 py-2  font-plusjakartaSans hover:bg-[#e9e8e8] duration-300 '><UserPlus size={20} className='  mr-1.5 ' /><span>Invite members</span></button>
+                        <button className=' bg-[#d9d4cc3b] flex items-center   rounded-md cursor-pointer  font-bold  px-4 py-2  font-plusjakartaSans hover:bg-[#155dfc]  duration-300 hover:text-white '><span>Click to upgrade</span></button>
+
+                        <button className=' cursor-pointer '>   <Bell /></button>
+                        <div className=' flex items-center hover:bg-[#d9d4cc3b]   px-3 py-1 rounded-md  cursor-pointer '>
+                            <div className=' mr-2'>
+                                <img className='w-8 h-8 object-cover rounded-full ' src={user.picture} alt="" />
+                            </div>
+                            <div>
+                                <p className=' font-inter font-medium '>{user.name}</p>
+                            </div>
                         </div>
                     </div>
-                </header>
-            </Container>
+                </div>
+            </header>
         </div>
     )
 }

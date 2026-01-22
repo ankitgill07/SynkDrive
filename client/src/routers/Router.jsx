@@ -1,30 +1,82 @@
 import MainLayout from "@/layout/MainLayout"
 import Auth from "@/Pages/Auth"
-import { createBrowserRouter } from "react-router-dom"
+import { createBrowserRouter, Navigate } from "react-router-dom"
+import ProtectedRoute from "./ProtectedRoute"
+import PublicRoute from "./PublicRouter"
+import ActionCard from "@/components/storage/ActionCard"
+import DriveHome from "@/drive/DriveHome"
+import ChildFoldersViews from "@/FoldersView/FolderCard"
+
 
 
 const router = createBrowserRouter([
+
     {
-        path: '/',
-        element: <MainLayout />,
+        path: '/drive',
+        element: (<ProtectedRoute>
+            <MainLayout />
+        </ProtectedRoute>),
         children: [
             {
-                path: "",
-                element: "hello"
+                index: true,
+                element: <Navigate to="home" replace />,
             },
             {
-                path: "/"
-            }
+
+                path: "home",
+                element: (
+                    <ProtectedRoute>
+                        <DriveHome />
+                    </ProtectedRoute>
+                )
+
+            },
+            {
+
+                path: "folder/:id",
+                element: (
+                    <ProtectedRoute>
+                        <DriveHome />
+                    </ProtectedRoute>
+                )
+            },
+            {
+
+                path: "photos",
+                element: <h2>photos</h2>
+
+            },
+            {
+
+                path: "shared-files",
+                element: <h2>shared-files</h2>
+
+            },
+            {
+
+                path: "favorite",
+                element: <h2>favorite</h2>
+
+            },
+            {
+
+                path: "recycle-bin",
+                element: <h2>recycle-bin</h2>
+
+            },
+
         ]
     },
     {
-        path: "signin",
-        element: <Auth />
+        path: "/auth",
+        element: <PublicRoute>
+            <Auth />
+        </PublicRoute>
     },
     {
-        path: "signup",
-        element: <Auth />
-    },
+        path: "/auth/error",
+        element: <h2>error</h2>
+    }
 
 ])
 
