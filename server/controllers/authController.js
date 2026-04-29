@@ -1,7 +1,7 @@
 import Users from "../models/userModel.js";
 import { sendOtpServService } from "../services/sendOptService.js";
 import OTP from "../models/otpModel.js";
-import { googleAuth } from "../services/GoogleAuthService.js";
+import { googleAuth } from "../services/googleAuthService.js";
 import { ObjectId } from "mongodb";
 import { setUserCookie } from "../utils/cookieUtil.js";
 import {
