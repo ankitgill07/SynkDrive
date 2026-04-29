@@ -1,8 +1,6 @@
 import { createClient } from "redis"
 
-const redisClient = createClient({
-    password : 'ankit@123'
-});
+const redisClient = createClient();
 
 redisClient.on("error", (err) => {
     console.log("Redis Client Error", err);

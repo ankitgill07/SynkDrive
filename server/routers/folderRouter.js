@@ -1,12 +1,20 @@
-import express from "express"
-import { createNewFolder, getAllFolders } from "../controllers/folderController.js"
+import express from "express";
+import {
+  createNewFolder,
+  getAllFolders,
+  renameFolderName,
+  softDeleteFolderData,
+} from "../controllers/folderController.js";
+import vaildldMidleware from "../middlewares/vaildldMidleware.js";
 
+const router = express.Router();
 
-const router = express.Router()
+router.post("/{:id}", createNewFolder);
 
+router.get("/{:id}", getAllFolders);
 
-router.post("/:parentFolderId?",  createNewFolder)
+router.patch("/{:id}", vaildldMidleware, renameFolderName);
 
-router.get("/:id?", getAllFolders)
+router.put("/{:id}", softDeleteFolderData);
 
-export default router
+export default router;

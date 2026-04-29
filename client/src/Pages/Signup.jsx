@@ -48,7 +48,7 @@ function Signup({ setCurrentAuthPage }) {
   const verifyOtpAndRegister = async (data) => {
     setloading(true)
     const result = await usersRegister(data)
-    if (result.success) {
+    if (result?.success) {
       toast.success(result.success)
       setCurrentAuthPage("signin")
       setloading(false)

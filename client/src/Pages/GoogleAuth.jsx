@@ -4,6 +4,7 @@ import { useGoogleLogin } from '@react-oauth/google';
 import { googleLogin } from '@/api/AuthApi';
 import { useNavigate } from 'react-router-dom';
 import { userAuth } from '@/contextApi/AuthContext';
+import { toast } from 'sonner';
 
 function GoogleAuth() {
   const { checkAuthorization } = userAuth()
@@ -16,7 +17,10 @@ function GoogleAuth() {
       const result = await googleLogin(code)
       if (result.success) {
         checkAuthorization()
+        toast.error(result.data)
         return navigate("/drive/home")
+      }else{
+        toast.error(result.message)
       }
     },
     onError: () => setError("Google login failed. Please try again."),

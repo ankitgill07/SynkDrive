@@ -2,7 +2,6 @@ import axios from "axios";
 
 export const githubAuth = async (code) => {
     try {
-        // 1. Exchange code for access token
         const tokenRes = await axios.post(
             "https://github.com/login/oauth/access_token",
             {
@@ -15,7 +14,6 @@ export const githubAuth = async (code) => {
 
         const accessToken = tokenRes.data.access_token;
 
-        // 2. Fetch user profile
         const userRes = await axios.get("https://api.github.com/user", {
             headers: { Authorization: `Bearer ${accessToken}` },
         });

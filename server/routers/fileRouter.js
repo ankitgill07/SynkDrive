@@ -1,14 +1,30 @@
-import express from "express"
-import { getFileById, uploadNewFile } from "../controllers/fileController.js"
-import upload from "../utils/multer.js"
+import express from "express";
+import {
+  downloadBulkFiles,
+  getFileById,
+  importFormGoogleDive,
+  recycledFilebyId,
+  renameFileName,
+  uploadCompleted,
+  uploadInitiate,
+} from "../controllers/fileController.js";
 
+import vaildldMidleware from "../middlewares/vaildldMidleware.js";
 
-const router = express.Router()
+const router = express.Router();
 
+router.post("/upload/initiate/{:id}", uploadInitiate);
 
+router.post("/upload/completed/{:fileId}", uploadCompleted);
 
-router.post("/:id", uploadNewFile)
+router.get("/{:id}", vaildldMidleware, getFileById);
 
-router.get("/:id", getFileById)
+router.patch("/{:id}", renameFileName);
 
-export default router
+router.post("/bulk/download", downloadBulkFiles);
+
+router.patch("/{:id}/delete", recycledFilebyId);
+
+router.post("/drive-import", importFormGoogleDive);
+
+export default router;

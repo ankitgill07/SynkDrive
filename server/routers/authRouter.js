@@ -1,23 +1,29 @@
-import express from "express"
-import { redirectToAuthURL, loginWithgoogleAuth, sendVerificationCode, userInfoData, userLogin, userLogout, userRegister, loginWithgithubAuth } from "../controllers/authController.js"
-import { checkAuth } from "../middlewares/authMiddleware.js"
+import express from "express";
+import {
+  redirectToAuthURL,
+  loginWithgoogleAuth,
+  sendVerificationCode,
+  userInfoData,
+  userLogin,
+  userRegister,
+  loginWithgithubAuth,
+} from "../controllers/authController.js";
+import { checkAuth } from "../middlewares/authMiddleware.js";
 
-const router = express.Router()
+const router = express.Router();
 
-router.post("/register", userRegister)
+router.post("/register", userRegister);
 
-router.post("/login", userLogin)
+router.post("/login", userLogin);
 
-router.get("/", checkAuth, userInfoData)
+router.get("/", checkAuth, userInfoData);
 
-router.post("/logout", userLogout)
+router.post("/send-otp", sendVerificationCode);
 
-router.post('/send-otp', sendVerificationCode)
+router.post("/google", loginWithgoogleAuth);
 
-router.post("/google", loginWithgoogleAuth)
+router.get("/github", redirectToAuthURL);
 
-router.get("/github", redirectToAuthURL)
+router.get("/github/callback", loginWithgithubAuth);
 
-router.get("/github/callback", loginWithgithubAuth)
-
-export default router
+export default router;
