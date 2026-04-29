@@ -4,7 +4,7 @@ import authRouter from "./routers/authRouter.js";
 import folderRouter from "./routers/folderRouter.js";
 import fileRouter from "./routers/fileRouter.js";
 import photoRouter from "./routers/photoRouter.js";
-import { connetDB } from "./db/db.js";
+import  connetDB  from "./db/db.js";
 import cookieParser from "cookie-parser";
 import cors from "cors";
 import { checkAuth } from "./middlewares/authMiddleware.js";
@@ -17,20 +17,23 @@ import { StatusCodes } from "http-status-codes";
 import { successResponse } from "./utils/apiResponse.js";
 import { errorHandler } from "./middlewares/errorHandle.js";
 import subscriptionRouter from "./routers/subscriptionRouter.js";
-import webhookRouter from "./routers/webhookRouter.js"
+import webhookRouter from "./routers/webhookRouter.js";
 import helmet from "helmet";
 
 const app = express();
 
+
 await connetDB();
+
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser(process.env.COOKIE_SECRET));
 app.use("/uploads", express.static("uploads"));
+
 app.use(
   cors({
-    origin: "http://localhost:5173",
+    origin: process.env.FRONTEND_URL,
     credentials: true,
   }),
 );
@@ -53,9 +56,9 @@ app.use("/starred", checkAuth, starredRouter);
 
 app.use("/search", checkAuth, searchRouter);
 
-app.use("/subscription", checkAuth , subscriptionRouter);
+app.use("/subscription", checkAuth, subscriptionRouter);
 
-app.use('/webhook' , webhookRouter)
+app.use("/webhook", webhookRouter);
 
 app.get("/", (req, res) => {
   return successResponse(
