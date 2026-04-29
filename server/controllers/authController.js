@@ -11,7 +11,7 @@ import {
 } from "../services/authService.js";
 import { githubAuth } from "../services/githubAuthService.js";
 import { loginValidate, registerValidate } from "../validate/authValidate.js";
-import Folder from "../models/FolderModel.js ";
+import Folder from "../models/folderModel.js";
 import { errorResponse, successResponse } from "../utils/apiResponse.js";
 import { StatusCodes } from "http-status-codes";
 import { UAParser } from "ua-parser-js";

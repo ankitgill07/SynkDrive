@@ -1,6 +1,6 @@
 import { google } from "googleapis";
 import { getAuthenticatedClient } from "../../utils/googleOAuth2.js";
-import Folder from "../../models/FolderModel.js";
+import Folder from "../../models/folderModel.js";
 import File from "../../models/fileModel.js";
 import fs from "fs/promises";
 import path from "path";

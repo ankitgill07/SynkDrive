@@ -1,5 +1,5 @@
 import Users from "../models/userModel.js";
-import Folder from "../models/FolderModel.js ";
+import Folder from "../models/folderModel.js";
 import mongoose from "mongoose";
 import redisClient from "../db/redisDB.js";
 
