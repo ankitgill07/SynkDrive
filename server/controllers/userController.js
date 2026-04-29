@@ -2,7 +2,7 @@ import { StatusCodes } from "http-status-codes";
 import redisClient from "../db/redisDB.js";
 import Users from "../models/userModel.js";
 import { errorResponse, successResponse } from "../utils/apiResponse.js";
-import Folder from "../models/FolderModel.js";
+import Folder from "../models/folderModel.js";
 import File from "../models/fileModel.js";
 import { s3DeleteObjects } from "../services/file/s3Servies.js";
 
