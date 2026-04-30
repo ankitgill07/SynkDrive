@@ -8,11 +8,9 @@ import { Button } from '@/components/ui/button'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Share2, Download, Bell, Settings } from 'lucide-react'
 
- function ShareLayout() {
+ function SharedLayout() {
   return (
-    <div className="min-h-screen bg-background">
-      {/* Header */}
-    
+    <div className="min-h-screen bg-background">   
         <div className="mx-auto">
           <div className="flex items-center justify-between">
             <div>
@@ -59,4 +57,4 @@ import { Share2, Download, Bell, Settings } from 'lucide-react'
   )
 }
 
-export default ShareLayout
+export default SharedLayout

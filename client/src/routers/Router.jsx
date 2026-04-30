@@ -13,7 +13,7 @@ import { FileProgressProvider } from "@/contextApi/FileProgress";
 import FolderWrapper from "@/drive/FolderWrapper";
 import UserProfile from "@/Pages/userProfile/UserProfile";
 import UserLayout from "@/layout/UserLayout";
-import ShareLayout from "@/layout/shareLayout";
+import SharedLayout from "@/layout/SharedLayout";
 import DashboardLayout from "@/Pages/Admin/dashboard-layout";
 import SharePage from "@/Pages/share/SharePage";
 import EmailSharePage from "@/Pages/share/EmailSharePage";
@@ -61,7 +61,7 @@ const router = createBrowserRouter([
         path: "shared-files",
         element: (
           <ProtectedRoute>
-            <ShareLayout />
+            <SharedLayout />
           </ProtectedRoute>
         ),
       },
