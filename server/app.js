@@ -19,12 +19,13 @@ import { errorHandler } from "./middlewares/errorHandle.js";
 import subscriptionRouter from "./routers/subscriptionRouter.js";
 import webhookRouter from "./routers/webhookRouter.js";
 import helmet from "helmet";
+import redisClient from "./db/redisDB.js";
 
 const app = express();
 
 
 await connetDB();
-
+await redisClient.connect();
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
