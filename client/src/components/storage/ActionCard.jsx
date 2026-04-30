@@ -5,7 +5,7 @@ import { ArrowUpFromLine, ChevronDown, FolderPlus, Plus } from "lucide-react";
 import React from "react";
 import { HiMiniSlash } from "react-icons/hi2";
 import { Link, useLocation } from "react-router-dom";
-import GoogleDriveImport from "../imports/googleDriveImport";
+import GoogleDriveImport from "../imports/GoogleDriveImport";
 
 function ActionCard({ Allfolder }) {
   const { breadCrumb } = useFolder();
