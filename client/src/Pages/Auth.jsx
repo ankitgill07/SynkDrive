@@ -2,7 +2,7 @@ import React, { useState } from 'react'
 import secondlogo from "../assets/images/secondlogo.png"
 import { Link } from 'react-router-dom'
 import { ArrowLeft, FileText, Folder, Shield, Smartphone } from 'lucide-react'
-import Signin from './signin'
+import Signin from './SignIn'
 import Signup from './Signup'
 import { motion, AnimatePresence } from "motion/react"
 import ForgetPassword from './ForgetPassword'
