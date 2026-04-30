@@ -4,7 +4,7 @@ import { Link, useNavigate, useParams } from "react-router-dom";
 import { getAllFoldersApi } from "@/api/FolderApi";
 import { FaFolder } from "react-icons/fa";
 import { IoMdMore } from "react-icons/io";
-import { renderFilePreview } from "../utils/helpers";
+import { renderFilePreview } from "../utils/Helpers";
 import { DropdownMenuDestructive } from "@/models/DropDownMenu";
 import RecycleDownMenu from "@/models/RecycleDownMenu";
 import RecycleFolderTree from "@/models/RecycleFolderTree";
