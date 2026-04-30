@@ -1,4 +1,4 @@
-import { axiosInstance } from "./axiosInstance";
+import { axiosInstance } from "./AxiosInstance";
 
 export const usersRegister = async (userData) => {
   try {
