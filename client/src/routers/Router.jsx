@@ -22,6 +22,10 @@ import CheckoutPage from "@/Pages/subscriptions/CheckoutPage";
 
 const router = createBrowserRouter([
   {
+    path: "/",
+    element: <Navigate to="/drive/home" replace />, 
+  },
+  {
     path: "/drive",
     element: (
       <ProtectedRoute>
