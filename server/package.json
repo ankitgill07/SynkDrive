@@ -2,7 +2,7 @@
   "type": "module",
   "scripts": {
     "dev": "node --watch app.js",
-    "start": "node app.js",
+    "start": "NODE_ENV=production node app.js",
     "build": "node build.js"
   },
   "dependencies": {
