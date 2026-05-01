@@ -20,19 +20,20 @@ export const userRegister = async (req, res, next) => {
   const { success, data, error } = registerValidate.safeParse(req.body);
 
   if (!success) {
-   return res.status(403).json({ error: error.issues });
+    return res.status(403).json({ error: error.issues });
   }
 
   const { name, email, password, trems, otp } = data;
+try{
+  const user = await Users.findOne({ email });
 
-  const user = await Users.findOne({ email, isDisable: false });
-  if (!user) {
-    return errorResponse(
-      res,
-      StatusCodes.FORBIDDEN,
-      "Your account is deactivated. Please contact support for reactivation.",
-    );
-  }
+    if (user) {
+      return errorResponse(
+        res,
+        StatusCodes.UNAUTHORIZED,
+        "Email is already registered",
+      );
+    }
 
   const optRecord = await OTP.findOne({ email, otp }).lean();
 
@@ -46,7 +47,7 @@ export const userRegister = async (req, res, next) => {
 
   await OTP.deleteOne();
 
-  try {
+
     const userId = new ObjectId();
     const folderId = new ObjectId();
 
@@ -69,8 +70,7 @@ export const userLogin = async (req, res, next) => {
   try {
     const user = await Users.findOne({ email });
 
-    if (!user) {
-      return res.status(401).json({ error: "Invaild Credentials" });
+    if (user) {
     } else if (user.isDisable) {
       return errorResponse(
         res,
@@ -105,7 +105,7 @@ export const userInfoData = async (req, res) => {
     maxStorageLimite: user.maxStorageLimite,
     usedStorage: rootFolder.size,
     role: user.role,
-    maxFileSize : user.maxFileSize,
+    maxFileSize: user.maxFileSize,
     socialLogin: user.createdWith !== "email",
     socialProvider: user.createdWith === "email" ? null : user.createdWith,
     manualLogin: user.loginWithPassword,
