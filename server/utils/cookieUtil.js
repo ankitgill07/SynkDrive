@@ -21,9 +21,9 @@ export const setUserCookie = async (res, userId, parser) => {
       signed: true,
       maxAge: 1000 * 60 * 60 * 24 * 7,
       sameSite: "none",
+      secure: true,
     });
   } catch (error) {
-    console.log(error);
+    throw new Error(error);
   }
 };
-
