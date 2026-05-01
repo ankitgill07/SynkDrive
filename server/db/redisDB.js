@@ -1,17 +1,15 @@
 import { createClient } from "redis";
 
 const redisClient = createClient({
-  username: "default",
-  password: process.env.REDIS_PASSWORD,
+  url: process.env.REDIS_DB_URL,
   socket: {
-    host: process.env.REDIS_HOST,  
-    port: parseInt(process.env.REDIS_PORT) || 13993,
+    tls: false,
     reconnectStrategy: (retries) => {
       if (retries > 5) {
         console.error("Redis error: Max retries reached");
         return new Error("Max retries reached");
       }
-      console.log(`Redis: retrying connection in ${retries * 500}ms (attempt ${retries})`);
+      console.log(`Redis: retrying in ${retries * 500}ms (attempt ${retries})`);
       return retries * 500;
     },
   },
@@ -25,12 +23,9 @@ redisClient.on("connect", () => {
   console.log("Redis connected successfully");
 });
 
-redisClient.on("reconnecting", () => {
-  console.log("Redis reconnecting...");
-});
-
 try {
   await redisClient.connect();
+  console.log("Redis ready");
 } catch (err) {
   console.error("Redis failed to connect:", err.message);
   process.exit(1);
