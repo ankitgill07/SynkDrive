@@ -103,7 +103,9 @@ export const logoutUserPreviewLoginDevice = async ({ userId }) => {
     "userIdx",
     `@userId:{${userId}}`,
   );
+
   if (allSessions.total >= 3) {
-    await allSessions[0].deleteOne();
+    const oldestSession = allSessions.documents[0]; 
+    await redisClient.del(oldestSession.id);        
   }
 };
