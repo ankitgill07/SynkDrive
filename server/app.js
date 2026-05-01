@@ -22,9 +22,11 @@ import helmet from "helmet";
 
 const app = express();
 
+const PORT = process.env.PORT || 4000;
+
 await connetDB();
 
-app.use(helmet())
+app.use(helmet());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser(process.env.COOKIE_SECRET));
@@ -79,8 +81,6 @@ app.get("/", (req, res) => {
 });
 
 app.use(errorHandler);
-
-const PORT = process.env.PORT || 4000;
 
 app.listen(PORT, () => {
   console.log(`Server started on port ${PORT}`);
