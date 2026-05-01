@@ -7,13 +7,16 @@ export async function checkAuth(req, res, next) {
   const { sid } = req.signedCookies;
   try {
     if (!sid) {
-      return res.status(401).json({ error: "User not found" });
+      return res.status(401).json({ error: "Unauthorized" });
     }
+
     const session = await redisClient.json.get(`session:${sid}`);
-    await redisClient.json.set(`session:${sid}`, "$.lastActive", Date.now());
+
     if (!session) {
-      return res.status(401).json({ error: "User not found" });
+      return res.status(401).json({ error: "Session expired. Please log in again." });
     }
+    await redisClient.json.set(`session:${sid}`, "$.lastActive", Date.now());
+
     const user = await Users.findById(session.userId);
 
     if (!user) {
@@ -25,6 +28,7 @@ export async function checkAuth(req, res, next) {
         "Your account is deactivated. Please contact support for reactivation.",
       );
     }
+
     req.user = user;
     next();
   } catch (error) {
