@@ -1,4 +1,4 @@
-import useFolder from "@/hooks/useFolder";
+
 import DraggableDialog from "@/models/AlertDialogDemo";
 import FadeMenu from "@/models/BasicMenu";
 import { ArrowUpFromLine, ChevronDown, FolderPlus, Plus } from "lucide-react";
@@ -7,19 +7,19 @@ import { HiMiniSlash } from "react-icons/hi2";
 import { Link, useLocation } from "react-router-dom";
 import GoogleDriveImport from "../imports/GoogleDriveImport";
 
-function ActionCard({ Allfolder }) {
-  const { breadCrumb } = useFolder();
+function ActionCard({ Allfolder , breadCrumb}) {
+
   const location = useLocation();
  
   return (
     <div className="w-full">
       <div className="fixed  top-18  left-65 w-[calc(100%-260px)] z-10 flex justify-between items-center bg-white px-5  py-4 ">
-        <div className="flex items-center gap-1">
+        <div className="flex items-center gap">
           <Link
             to="/drive/home"
             className="text-lg font-semibold hover:text-black transition"
           >
-            Drive
+           My Drive
           </Link>
           {breadCrumb?.map((folder, index) => (
             <div key={folder._id} className="flex items-center gap-1">

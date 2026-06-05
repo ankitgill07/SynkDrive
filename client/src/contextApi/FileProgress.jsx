@@ -26,15 +26,14 @@ export const FileProgressProvider = ({ children }) => {
   const handleClose = () => {
     setAnchorEl(null);
   };
-
-  const handleFileChange = async (e) => {
-    const selectedFiles = Array.from(e.target.files);
+  const processFiles = async (selectedFiles) => {
     if (selectedFiles.length === 0) return;
     handleClose();
     try {
       for (const file of selectedFiles) {
         if (file.size > user.maxFileSize) {
-          return toast.error("File larger then 200mb");
+          toast.error(`${file.name} is larger than 200mb, skipped`);
+          continue;
         }
         const result = await uploadInitiateApi(id, {
           name: file.name,
@@ -42,7 +41,7 @@ export const FileProgressProvider = ({ children }) => {
           type: file.type,
         });
 
-        const { uploadUrl, fileId } = result.data;
+        const { uploadUrl, fileId } = result?.data;
         setProgress((prev) => [
           ...prev,
           {
@@ -53,6 +52,7 @@ export const FileProgressProvider = ({ children }) => {
             type: file.type,
           },
         ]);
+
         const s3Result = await uploadFileS3Buket(
           uploadUrl,
           fileId,
@@ -60,7 +60,7 @@ export const FileProgressProvider = ({ children }) => {
           updateProgress,
         );
         if (s3Result === 200) {
-          const result = await uploadCompletedApi(fileId);
+          await uploadCompletedApi(fileId);
         }
       }
     } catch (error) {
@@ -68,10 +68,16 @@ export const FileProgressProvider = ({ children }) => {
     }
   };
 
+  const handleFileChange = async (e) => {
+    const selectedFiles = Array.from(e.target.files);
+    await processFiles(selectedFiles);
+  };
+
   return (
     <FileProgressContext.Provider
       value={{
         handleFileChange,
+        processFiles,
         progress,
         handleClick,
         open,

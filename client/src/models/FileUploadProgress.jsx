@@ -8,7 +8,8 @@ import { useFileProgress } from "@/contextApi/FileProgress";
 import { renderFilePreview } from "@/utils/Helpers";
 import { userAuth } from "@/contextApi/AuthContext";
 
-function FileUploadProgress({ allItems }) {
+
+function FileUploadProgress({Allfolder}) {
   const { progress } = useFileProgress();
   const [collapsed, setCollapsed] = useState(false);
   const [visible, setVisible] = useState(true);
@@ -19,7 +20,7 @@ function FileUploadProgress({ allItems }) {
 
     const allDone = progress.every((u) => u.progress >= 100);
     if (allDone) {
-      allItems();
+      Allfolder()
       checkAuthorization();
     }
   }, [progress, checkAuthorization]);

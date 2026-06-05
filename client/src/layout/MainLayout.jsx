@@ -8,20 +8,18 @@ function MainLayout() {
 
 
   return (
-    <div className="grid grid-cols-[280px_1fr] min-h-screen">
-      {/* Sidebar column */}
-      <aside className="col-span-1">
-        <SideBare />
-      </aside>
+<div className="flex min-h-screen">
+  <aside className="w-64">
+    <SideBare />
+  </aside>
 
-      {/* Content column */}
-      <div className="col-span-1">
-        <Header />
-        <main className="pt-18 mt-6  ">
-          <Outlet />
-        </main>
-      </div>
-    </div>
+  <div className="flex-1">
+    <Header />
+    <main className="pt-20 px-5">
+      <Outlet />
+    </main>
+  </div>
+</div>
   )
 }
 

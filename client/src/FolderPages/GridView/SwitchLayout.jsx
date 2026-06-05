@@ -52,7 +52,7 @@ function SwitchLayout({
   };
 
   return (
-    <div className=" fixed  left-65 w-[calc(100%-260px)] z-10 px-5 py-3 bg-white top-34">
+    <div className=" fixed  left-65 w-[calc(100%-260px)] z-10 px-4 py-3 bg-white top-34">
       <div className="mb-6  flex justify-between items-center">
         <div className="flex items-center gap-x-3 h-10">
           <AnimatePresence mode="wait">

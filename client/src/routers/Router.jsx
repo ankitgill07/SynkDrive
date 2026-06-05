@@ -19,6 +19,8 @@ import SharePage from "@/Pages/share/SharePage";
 import EmailSharePage from "@/Pages/share/EmailSharePage";
 import  PricingPage  from "@/Pages/subscriptions/PricingPage";
 import CheckoutPage from "@/Pages/subscriptions/CheckoutPage";
+import SubscriptionLayout from "@/layout/SubscriptionLayout";
+import SubscriptionManagePage from "@/Pages/subscriptions/SubscriptionManagePage";
 
 const router = createBrowserRouter([
   {
@@ -95,6 +97,14 @@ const router = createBrowserRouter([
       </ProtectedRoute>
     ),
   },
+    {
+    path: "/drive/subscription",
+    element: (
+      <ProtectedRoute>
+        <SubscriptionManagePage />
+      </ProtectedRoute>
+    ),
+  },
   {
     path: "/admin/dashbord",
     element: (
@@ -112,15 +122,15 @@ const router = createBrowserRouter([
     ),
   },
   {
-    path: "/plain",
+    path: "/plan",
     element: (
       <ProtectedRoute>
-        <PricingPage />
+        <SubscriptionLayout />
       </ProtectedRoute>
     ),
   },
   {
-    path: "/checkout",
+    path: "/checkout/:id",
     element: (
       <ProtectedRoute>
         <CheckoutPage />

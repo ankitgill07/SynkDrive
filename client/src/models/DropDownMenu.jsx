@@ -39,6 +39,7 @@ export function DropdownMenuDestructive({ items, allItems }) {
     handleSharePublicLink,
     showShareModal,
     setShowShareModal,
+    openShareModal,
     shareLink,
   } = useShare(items);
 
@@ -104,15 +105,17 @@ export function DropdownMenuDestructive({ items, allItems }) {
           </DropdownMenuGroup>
           <DropdownMenuSeparator />
           <DropdownMenuGroup>
-            <DropdownMenuItem
-              onClick={() => {
-                handleSharePublicLink;
-                setShowShareModal(true);
-              }}
-            >
-              <Share />
-              Share
-            </DropdownMenuItem>
+            {items.type === "file" && (
+              <DropdownMenuItem
+                onClick={() => {
+                  handleSharePublicLink;
+                  openShareModal(true);
+                }}
+              >
+                <Share />
+                Share
+              </DropdownMenuItem>
+            )}
             <DropdownMenuItem onClick={() => handleAddStarred(items._id)}>
               {items.isStarred ? <FaStar /> : <Star />}
 

@@ -6,15 +6,14 @@ import { useParams } from "react-router-dom";
 import useFolder from "@/hooks/useFolder";
 
 function DriveHome() {
-  const {allItems , Allfolder} = useFolder()
+  const { allItems, Allfolder , handleOpen , breadCrumb} = useFolder();
 
-
-
+ 
   return (
-    <div>
-      <ActionCard Allfolder={Allfolder} />
-      <div className=" mt-7  ">
-        <RootFoldersViews folderData={allItems} Allfolder={Allfolder} />
+    <div className="">
+      <ActionCard Allfolder={Allfolder} breadCrumb={breadCrumb}/>
+      <div className=" mt-7  relative ">
+        <RootFoldersViews folderData={allItems} Allfolder={Allfolder} handleOpen={handleOpen} />
       </div>
     </div>
   );

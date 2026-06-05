@@ -14,7 +14,7 @@ import useAction from "@/hooks/useAction";
 import { useDispatch } from "react-redux";
 import { toggleItems } from "@/lib/FolderSlice";
 
-function RowLayout({ folder, allItems, }) {
+function RowLayout({ folder, allItems, handleOpen}) {
   const { user } = userAuth();
   const dispatch = useDispatch();
   const { handleAddStarred } = useAction({
@@ -22,7 +22,7 @@ function RowLayout({ folder, allItems, }) {
     allItems,
   });
 
-  const { handleOpen } = useFolder();
+
 
 
   return (

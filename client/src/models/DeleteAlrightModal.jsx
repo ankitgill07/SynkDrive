@@ -8,7 +8,7 @@ import DialogTitle from "@mui/material/DialogTitle";
 import useMediaQuery from "@mui/material/useMediaQuery";
 import { useTheme } from "@mui/material/styles";
 import { deleteFileApi, deleteFolderApi } from "@/api/RecycleBinApi";
-import useFolder from "@/hooks/useFolder";
+
 import { toast } from "sonner";
 
 export default function DeleteAlrightModal({

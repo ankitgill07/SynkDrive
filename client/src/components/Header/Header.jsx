@@ -22,7 +22,7 @@ function Header() {
               <UserPlus size={20} className="  mr-1.5 " />
               <span>Invite members</span>
             </button>
-            <Link to={"/plain"}>
+            <Link to={"/plan"}>
               <button className=" bg-[#d9d4cc3b] flex items-center   rounded-md cursor-pointer  font-bold  px-4 py-2  font-plusjakartaSans hover:bg-[#155dfc]  duration-300 hover:text-white ">
                 <span>Click to upgrade</span>
               </button>

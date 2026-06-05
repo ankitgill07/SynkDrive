@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, memo } from "react";
 import ActionCard from "../components/storage/ActionCard";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { getAllFoldersApi } from "@/api/FolderApi";
@@ -8,11 +8,9 @@ import { renderFilePreview } from "../utils/Helpers";
 import { DropdownMenuDestructive } from "@/models/DropDownMenu";
 import RecycleDownMenu from "@/models/RecycleDownMenu";
 import RecycleFolderTree from "@/models/RecycleFolderTree";
-import useFolder from "@/hooks/useFolder";
 
-function ChildFoldersViews({ folder, allItems, mode }) {
-  const { handleOpen } = useFolder();
 
+function ChildFoldersViews({ folder, allItems, mode, handleOpen }) {
   return (
     <div>
       <div className="w-58">
@@ -44,7 +42,7 @@ function ChildFoldersViews({ folder, allItems, mode }) {
             <div
               className="
               mt-2.5 h-[calc(100%-52px)] rounded-md bg-white
-              flex items-center justify-center overflow-hidden 
+              flex items-center justify-center overflow-hidden
             "
             >
               {folder.type === "folder" ? (
@@ -60,4 +58,4 @@ function ChildFoldersViews({ folder, allItems, mode }) {
   );
 }
 
-export default ChildFoldersViews;
+export default memo(ChildFoldersViews);

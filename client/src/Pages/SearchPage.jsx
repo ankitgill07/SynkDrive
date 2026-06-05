@@ -12,7 +12,9 @@ function SearchPage() {
   const [searchInput, setSearchInput] = useState("");
   const [files, setFiles] = useState([]);
   const [folders, setFolders] = useState([]);
+  
   const { handleOpen } = useFolder();
+
   const handleSearchApi = async () => {
     const result = await searchQueryApi(searchInput);
     const { folders, files } = result.data;
