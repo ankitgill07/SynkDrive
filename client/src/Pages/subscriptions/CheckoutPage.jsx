@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { PLAN_LIST, getPricing, fmtINR } from "./plans";
+import { PLAN_LIST, getPricing, fmtINR } from "./Plans";
 import { loadRazorpaySDK, openRazorpayPopup } from "../../utils/Razorpay";
 import { createSubscriptionApi } from "@/api/SubscriptionApi";
 import { userAuth } from "@/contextApi/AuthContext";
