@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { PLAN_LIST, getPricing, fmtINR } from "./plans";
+import { PLAN_LIST, getPricing, fmtINR } from "./Plans";
  
 export default function PricingPage({ onSelectPlan }) {
   const [billing, setBilling] = useState("monthly");

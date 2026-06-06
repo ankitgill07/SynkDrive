@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { fmtINR } from "./plans";
+import { fmtINR } from "./Plans";
  
 export default function FailedPage({ plan, billing, errorMsg, onRetry, onChangePlan }) {
   const [show, setShow] = useState(false);

@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { fmtINR } from "./plans";
+import { fmtINR } from "./Plans";
 import { Link } from "react-router-dom";
 
 const CONFETTI_COLORS = [
