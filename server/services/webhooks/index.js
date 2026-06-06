@@ -3,7 +3,7 @@ import { handleCancelledEvent } from "./handleCancelledEvent.js";
 import { handlePausedEvent } from "./handlePausedEvent.js";
 import { handleResumedEvent } from "./handleResumedEvent.js";
 
-export const handlleRazorpayWebhookEvents = async (event, webhookData) => {
+export const handleRazorpayWebhookEvents = async (event, webhookData) => {
   switch (event) {
     case "subscription.activated":
       await handleActivatedEvent(webhookData);
