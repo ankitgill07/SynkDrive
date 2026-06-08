@@ -2,7 +2,7 @@ import Subscription from "../../models/subscriptionModal.js";
 import Users from "../../models/userModel.js";
 import { getPlanById } from "../../utils/getPlanDetails.js";
 import { disableUserService } from "../../utils/serviceControl.js";
-import cron from "node-cron";
+
 
 export const handlePausedEvent = async (webhookData) => {
   try {

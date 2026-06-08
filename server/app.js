@@ -11,7 +11,6 @@ import { checkAuth } from "./middlewares/authMiddleware.js";
 import recycleBinRouter from "./routers/recycleBinRouter.js";
 import starredRouter from "./routers/starredRouter.js";
 import shareRoutter from "./routers/shareRouter.js";
-import searchRouter from "./routers/searchRouter.js ";
 import userRouter from "./routers/userRouter.js";
 import { StatusCodes } from "http-status-codes";
 import { successResponse } from "./utils/apiResponse.js";
@@ -125,8 +124,6 @@ app.use("/recycle-bin", checkAuth, recycleBinRouter);
 app.use("/photos", checkAuth, photoRouter);
 
 app.use("/starred", checkAuth, starredRouter);
-
-app.use("/search", checkAuth, searchRouter);
 
 app.use("/subscription", checkAuth, subscriptionRouter);
 

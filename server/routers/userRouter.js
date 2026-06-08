@@ -12,25 +12,39 @@ import {
   userLogout,
 } from "../controllers/userController.js";
 import upload from "../utils/multer.js";
+import { Limiter } from "../utils/RateLimiter.js";
 
 const router = express.Router();
 
-router.patch("/setPassword", setManaulLoginPassword);
+router.patch("/setPassword", Limiter.setPassword(), setManaulLoginPassword);
 
-router.patch("/password/update", updateUserPassword);
+router.patch("/password/update", Limiter.updatePassword(), updateUserPassword);
 
-router.patch("/update", upload.single("file"), updateProfile);
+router.patch(
+  "/update",
+  Limiter.updateProfile(),
+  upload.single("file"),
+  updateProfile,
+);
 
-router.post("/logout", userLogout);
+router.post("/logout", Limiter.logout(), userLogout);
 
-router.post("/disable", disableUserAccount);
+router.post("/disable", Limiter.disableAccount(), disableUserAccount);
 
-router.get("/profile", getUserProfile);
+router.get("/profile", Limiter.getProfile(), getUserProfile);
 
-router.delete("/all-device-logout", logoutForAllDevices);
+router.delete(
+  "/all-device-logout",
+  Limiter.logoutAllDevices(),
+  logoutForAllDevices,
+);
 
-router.delete("/session/{:sid}", logoutDevicesBySid);
+router.delete("/session/{:sid}", Limiter.deleteSession(), logoutDevicesBySid);
 
-router.delete("/account-deleted", deleteAccountPermanetly);
+router.delete(
+  "/account-deleted",
+  Limiter.deleteAccount(),
+  deleteAccountPermanetly,
+);
 
 export default router;
