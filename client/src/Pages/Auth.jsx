@@ -1,6 +1,6 @@
-import React, { useState } from 'react'
+import React from 'react'
 import secondlogo from "../assets/images/secondlogo.png"
-import { Link } from 'react-router-dom'
+import { Link, useSearchParams } from 'react-router-dom'
 import { ArrowLeft, FileText, Folder, Shield, Smartphone } from 'lucide-react'
 import Signin from './SignIn'
 import Signup from './Signup'
@@ -9,13 +9,30 @@ import ForgetPassword from './ForgetPassword'
 
 
 function Auth() {
-    const [currentAuthPage, setCurrentAuthPage] = useState("signin")
+    const [searchParams, setSearchParams] = useSearchParams();
+    const pageParam = searchParams.get("page");
+
+    const currentAuthPage = pageParam === "register" ? "create" :
+                            (pageParam === "forgetPassword" ? "forgetPassword" :
+                            (pageParam === "otp" ? "otp" : "signin"));
+
+    const setCurrentAuthPage = (page) => {
+        if (page === "create") {
+            setSearchParams({ page: "register" });
+        } else if (page === "signin") {
+            setSearchParams({ page: "login" });
+        } else if (page === "forgetPassword") {
+            setSearchParams({ page: "forgetPassword" });
+        } else if (page === "otp") {
+            setSearchParams({ page: "otp" });
+        }
+    };
 
 
     return (
-        <div className=' w-full h-screen flex items-center justify-center  '>
-            <div className=' mx-auto  flex  rounded-md  '>
-                <div className=' flex flex-col justify-between px-10 py-11  bg-[#155DFC] rounded-l-md '>
+        <div className='w-full min-h-screen flex items-center justify-center p-4 bg-slate-50'>
+            <div className='mx-auto flex flex-col lg:flex-row w-full max-w-5xl rounded-2xl shadow-xl overflow-y-auto lg:overflow-hidden bg-white max-h-[95vh] lg:max-h-none'>
+                <div className='hidden lg:flex lg:w-1/2 flex-col justify-between px-10 py-11 bg-[#155DFC]'>
                     <div>
                         <div className=' mb-8  '>
                             <Link to={'/drive'}>
@@ -66,8 +83,8 @@ function Auth() {
                                 <div className=' space-y-2'>
                                     {['Documents', 'Photos', "Projects"].map((folder, i) => (
                                         <div key={i} className=' flex items-center  justify-between  opacity-70 '>
-                                            <div className=' flex items-center mr-34 '>
-                                                <p className=' bg-white/20 rounded-sm mr-2 w-6 h-6 flex items-center justify-center '><Folder size={13} /></p>
+                                            <div className=' flex items-center gap-2 '>
+                                                <p className=' bg-white/20 rounded-sm w-6 h-6 flex items-center justify-center '><Folder size={13} /></p>
                                                 <p className=' text-xs font-medium font-inter'>{folder}</p>
                                             </div>
                                             <p className='text-xs   font-medium font-inter ' >{(i + 1) * 12} files</p>
@@ -83,7 +100,7 @@ function Auth() {
                         </div>
                     </div>
                 </div>
-                <div className=' border-t w-lg  bg-white shadow-2xl p-11   rounded-r-md '>
+                <div className='w-full lg:w-1/2 border-t lg:border-t-0 bg-white p-6 sm:p-11'>
                     <div>
                         {!["forgetPassword", "otp"].includes(currentAuthPage) ?
                             <div className=' flex bg-gray-50  p-1  rounded-lg '>

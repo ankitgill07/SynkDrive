@@ -12,9 +12,9 @@ export default function FadeMenu() {
 
   return (
     <div>
-      <button className="bg-[#d9d4cc3b] relative overflow-hidden hover:bg-[#e9e8e8] cursor-pointer px-3.5 py-1.5 flex items-center rounded-md">
+      <button className="bg-[#d9d4cc3b] relative overflow-hidden hover:bg-[#e9e8e8] cursor-pointer px-2.5 sm:px-3.5 py-1.5 flex items-center rounded-md">
         <ArrowUpFromLine size={18} />
-        <span className="mx-1 font-bold text-sm">Upload</span>
+        <span className="hidden sm:inline mx-1 font-bold text-sm">Upload</span>
         <input type="file" className=" absolute  left-0 cursor-pointer opacity-0" multiple onChange={handleFileChange} />
       </button>
       {/* <Menu

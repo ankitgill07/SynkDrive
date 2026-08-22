@@ -147,7 +147,7 @@ export default function SuccessPage({
             ))}
           </div>
 
-          <div className="grid grid-cols-3 gap-2.5 mb-6">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 mb-6">
             {[
               { icon: "📁", label: "Upload files", sub: "Start syncing" },
               { icon: "📱", label: "Mobile app", sub: "iOS & Android" },

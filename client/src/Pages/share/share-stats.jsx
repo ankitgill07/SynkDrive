@@ -1,40 +1,36 @@
 import { Card } from '@/components/ui/card'
 import { Share2, FileUp, Users, Lock } from 'lucide-react'
 
-export function ShareStats() {
+export function ShareStats({statsCount}) {
+  console.log(statsCount);
+  
   const stats = [
     {
       label: 'Files Shared by Me',
-      value: '24',
+      value: statsCount?.shareByMe,
       icon: FileUp,
       color: 'text-blue-500',
       bgColor: 'bg-blue-50 dark:bg-blue-950',
     },
     {
       label: 'Shared with Me',
-      value: '18',
+      value: statsCount?.shareWithMe,
       icon: Share2,
       color: 'text-purple-500',
       bgColor: 'bg-purple-50 dark:bg-purple-950',
     },
     {
       label: 'Collaborators',
-      value: '12',
+      value: statsCount?.shareWithMe,
       icon: Users,
       color: 'text-cyan-500',
       bgColor: 'bg-cyan-50 dark:bg-cyan-950',
     },
-    {
-      label: 'Private Files',
-      value: '42',
-      icon: Lock,
-      color: 'text-green-500',
-      bgColor: 'bg-green-50 dark:bg-green-950',
-    },
+
   ]
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
       {stats.map((stat) => {
         const Icon = stat.icon
         return (

@@ -1,5 +1,5 @@
 import mongoose, { Schema } from "mongoose";
-import bcrypt from "bcrypt";
+import bcryptjs from "bcryptjs";
 
 const userSchema = new mongoose.Schema(
   {
@@ -39,7 +39,7 @@ const userSchema = new mongoose.Schema(
     },
     role: {
       type: String,
-      enum: ["SuperAdmin", "Admin", "Manger", "User"],
+      enum: ["Admin", "Manager", "User", "admin", "manager", "user"],
       default: "User",
     },
     createdWith: {
@@ -80,12 +80,12 @@ const userSchema = new mongoose.Schema(
 );
 
 userSchema.methods.comparePassword = async function (enteredPassword) {
-  return bcrypt.compare(enteredPassword, this.password);
+  return bcryptjs.compare(enteredPassword, this.password);
 };
 
 userSchema.pre("save", async function () {
   if (!this.isModified("password")) return;
-  this.password = await bcrypt.hash(this.password, 12);
+  this.password = await bcryptjs.hash(this.password, 12);
 });
 
 const Users = mongoose.model("user", userSchema);

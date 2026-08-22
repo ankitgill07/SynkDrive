@@ -4,10 +4,12 @@ const linkShareSchema = new mongoose.Schema(
   {
     fileId: {
       type: mongoose.Types.ObjectId,
+       ref: "file",
       required: true,
     },
     sharedBy: {
       type: mongoose.Types.ObjectId,
+       ref: "user",
       required: true,
     },
     isEnabled: {

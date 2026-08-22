@@ -19,8 +19,8 @@ router.post("/login", Limiter.login(), userLogin);
 
 router.get(
   "/",
-  RateLimiter({ windowTimeInMs: 15 * _1m, limit: 10 }),
   checkAuth,
+  Limiter.getProfile(),
   userInfoData,
 );
 

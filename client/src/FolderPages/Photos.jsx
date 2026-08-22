@@ -15,13 +15,14 @@ function Photos() {
   }, []);
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-x-1 gap-y-4 overflow-hidden ">
+    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 sm:gap-4 overflow-hidden">
       {allPhotos?.map((folder) => (
         <ChildFoldersViews
           key={folder._id}
           folder={folder}
           allItems={fetchRicycleData}
           mode="normal"
+          hideCheckbox={true}
         />
       ))}
     </div>

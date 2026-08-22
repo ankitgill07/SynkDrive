@@ -1,8 +1,11 @@
 import express from "express";
 import {
+  getListPeopleAccessFile,
+  getSharedFileDashboard,
   getShareFileInfo,
   getShareFileWithEmailData,
   getShareWithLink,
+  getUsertoShareFilewithEmail,
   shareFileToggle,
   shareInviteWithEmail,
   shareWithLinkPermissionChange,
@@ -52,11 +55,18 @@ router.get(
   validateEmailShare,
   getShareFileWithEmailData,
 );
+
+router.get("/files/{:fileId}/people", getListPeopleAccessFile);
+
 router.get(
   "/files/{:fileId}/stream",
   Limiter.fileStream(),
   validateEmailShare,
   streamSharedFile,
 );
+
+router.get('/files/dashboard' , getSharedFileDashboard)
+
+router.get("/files/{:email}/user" , getUsertoShareFilewithEmail)
 
 export default router;

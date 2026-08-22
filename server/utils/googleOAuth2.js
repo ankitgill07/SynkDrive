@@ -1,5 +1,10 @@
 import { google } from "googleapis";
-import { config } from "../config/google.js";
+
+const config = {
+  clientId: process.env.GOOGLE_CLIENT_ID,
+  clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+};
+
 
 export function createOAuthClient() {
   return new google.auth.OAuth2(config.clientId, config.clientSecret);

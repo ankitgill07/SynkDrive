@@ -18,7 +18,7 @@ export const PLANS = [
     billingCycle: "monthly",
     storageBytes: 25 * GB,
     maxDevices: 2,
-    maxFileSizeBytes: 4 * GB,
+    maxFileSizeBytes: 2 * GB,
     restoreFileDays: 60,
   },
   {
@@ -29,7 +29,7 @@ export const PLANS = [
     billingCycle: "monthly",
     storageBytes: 80 * GB,
     maxDevices: 4,
-    maxFileSizeBytes: 8 * GB,
+    maxFileSizeBytes: 6 * GB,
     restoreFileDays: 120,
   },
   {
@@ -39,8 +39,8 @@ export const PLANS = [
     priceCurrency: "INR",
     billingCycle: "monthly",
     storageBytes: 200 * GB,
-    maxDevices: 8,
-    maxFileSizeBytes: 15 * GB,
+    maxDevices: 5,
+    maxFileSizeBytes: 10 * GB,
     restoreFileDays: 180,
   },
 ];

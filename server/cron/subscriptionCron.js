@@ -6,18 +6,18 @@ export const disableServiceSubscriptionPausedCron = () => {
   try {
     cron.schedule("0 * * * *", async () => {
       const now = new Date();
-      const expiredSubscription = await Subscription.findOne({
+      const expiredSubscriptions = await Subscription.find({
         status: "paused",
         currentEnd: { $lte: now },
       });
 
-      for (const subscription of expiredSubscription) {
+      for (const subscription of expiredSubscriptions) {
         try {
           await disableUserService(subscription?.userId);
         } catch (error) {
           console.error(
             `Failed processing subscription ${subscription.subscriptions_id}`,
-            err.message,
+            error.message,
           );
         }
       }

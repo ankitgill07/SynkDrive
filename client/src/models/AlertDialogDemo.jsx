@@ -47,7 +47,7 @@ export default function DraggableDialog({ Allfolder }) {
         className=" bg-[#d9d4cc3b] hover:bg-[#e9e8e8] cursor-pointer px-2.5  py-1.5 flex items-center rounded-md  "
       >
         <FolderPlus size={19} />
-        <span className=" font-plusjakartaSans ml-1.5  font-bold text-sm ">
+        <span className="hidden sm:inline font-plusjakartaSans ml-1.5 font-bold text-sm">
           New folder
         </span>
       </button>

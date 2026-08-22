@@ -24,17 +24,26 @@ export default function RecycleFolderTree({
   };
 
   const { fetchRicycleData } = useRecycle();
+  const [isRestoring, setIsRestoring] = React.useState(false);
+
   const handleRestoreData = async (id) => {
-    const result =
-      parentItems.type === "folder"
-        ? await restoreFoldersApi(id)
-        : await restoreDataApi(id);
-    if (result.success) {
-      handleClose();
-      fetchRicycleData();
-      toast.success(`Restored ${parentItems.name}`);
-    } else {
-      toast.error(result.message);
+    setIsRestoring(true);
+    try {
+      const result =
+        parentItems.type === "folder"
+          ? await restoreFoldersApi(id)
+          : await restoreDataApi(id);
+      if (result.success) {
+        handleClose();
+        fetchRicycleData();
+        toast.success(`Restored ${parentItems.name}`);
+      } else {
+        toast.error(result.message || "Failed to restore");
+      }
+    } catch (err) {
+      toast.error("Failed to restore");
+    } finally {
+      setIsRestoring(false);
     }
   };
 
@@ -112,14 +121,19 @@ export default function RecycleFolderTree({
           <button
             className="bg-[#DAD4CD3B] px-4 rounded-md hover:bg-[#a19e9b3b] font-inter font-bold cursor-pointer  text-sm  py-1.5 "
             onClick={handleClose}
+            disabled={isRestoring}
           >
             Cancel
           </button>
           <button
-            className="bg-black text-white px-4 rounded-md font-inter font-bold cursor-pointer  text-sm  py-1.5 "
+            className="bg-black text-white px-4 rounded-md font-inter font-bold cursor-pointer  text-sm  py-1.5 flex items-center gap-1.5"
             onClick={() => handleRestoreData(parentItems._id)}
+            disabled={isRestoring}
           >
-            Restore All File
+            {isRestoring && (
+              <span className="animate-spin rounded-full h-3 w-3 border-2 border-white border-t-transparent" />
+            )}
+            {isRestoring ? "Restoring..." : "Restore All File"}
           </button>
         </DialogActions>
       </Dialog>

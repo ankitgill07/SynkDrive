@@ -1,5 +1,5 @@
 import File from "../models/fileModel.js";
-import { ObjectId } from "mongodb";
+import mongoose from "mongoose";
 import Folder from "../models/folderModel.js ";
 import { rm } from "fs/promises";
 import { $ZodObjectJIT } from "zod/v4/core";
@@ -67,7 +67,7 @@ export const getRecyleDataById = async (req, res) => {
   }
 };
 export const restoreData = async (req, res, next) => {
-  const fileId = new ObjectId(req.params.id);
+  const fileId = new mongoose.Types.ObjectId(req.params.id);
   const userId = req.user._id;
   try {
     await restoreFiles(fileId, userId);
@@ -78,7 +78,7 @@ export const restoreData = async (req, res, next) => {
 };
 
 export const restoreFolder = async (req, res, next) => {
-  const id = new ObjectId(req.params.id);
+  const id = new mongoose.Types.ObjectId(req.params.id);
   try {
     await restoreFolderOrFile(id);
     successResponse(res, StatusCodes.ACCEPTED, "Folder restore success");
@@ -114,7 +114,7 @@ export const bulkRestoreData = async (req, res, next) => {
 };
 
 export const deletedPermanetly = async (req, res, next) => {
-  const fileId = new ObjectId(req.params.id);
+  const fileId = new mongoose.Types.ObjectId(req.params.id);
   const userId = res.user._id;
   try {
     await filesDeletParmanetly(fileId, userId);
@@ -125,7 +125,7 @@ export const deletedPermanetly = async (req, res, next) => {
 };
 
 export const deleteFolderParmanetly = async (req, res) => {
-  const id = new ObjectId(req.params.folderId);
+  const id = new mongoose.Types.ObjectId(req.params.folderId);
   const userId = req.user._id;
   try {
     await folderDeleteParmanetly(id, userId);

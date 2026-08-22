@@ -17,26 +17,30 @@ import { AlertCircle, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { deleteAccountPermanentlyApi, disableAccountApi } from "@/api/UserApi";
 import { toast } from "sonner";
+import { userAuth } from "@/contextApi/AuthContext";
 
 export function AccountManagement() {
   const [disableOpen, setDisableOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
+  const { checkAuthorization } = userAuth();
 
   const handeDisableAccount = async () => {
     const result = await disableAccountApi();
     if (result.success) {
-      toast.success(result.data);
+      toast.success(result.success);
+      await checkAuthorization();
     } else {
-      toast.error(result.message);
+      toast.error(result.error || "Failed to disable account");
     }
   };
 
   const handelDeleteAccount = async () => {
     const result = await deleteAccountPermanentlyApi();
-    if (result.data) {
-      toast.success(result.data);
+    if (result.success) {
+      toast.success(result.success);
+      await checkAuthorization();
     } else {
-      toast.error(result.message);
+      toast.error(result.error || "Failed to delete account");
     }
   };
 
@@ -66,7 +70,6 @@ export function AccountManagement() {
               <AlertDialog open={disableOpen} onOpenChange={setDisableOpen}>
                 <AlertDialogTrigger asChild>
                   <Button
-                    onClick={handeDisableAccount}
                     variant="outline"
                     className="text-yellow-600 hover:text-yellow-700 hover:bg-yellow-50 border-yellow-200"
                   >
@@ -88,7 +91,7 @@ export function AccountManagement() {
                     <AlertDialogCancel className="bg-secondary text-foreground border-border hover:bg-secondary/80">
                       Cancel
                     </AlertDialogCancel>
-                    <AlertDialogAction className="bg-yellow-600 hover:bg-yellow-700 text-white">
+                    <AlertDialogAction onClick={handeDisableAccount} className="bg-yellow-600 hover:bg-yellow-700 text-white">
                       Disable
                     </AlertDialogAction>
                   </AlertDialogFooter>

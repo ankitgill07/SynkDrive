@@ -1,6 +1,7 @@
 import Subscription from "../../models/subscriptionModal.js";
 import Users from "../../models/userModel.js";
 import { getPlanById } from "../../utils/getPlanDetails.js";
+import { sendEventToUser } from "../../controllers/eventController.js";
 
 export const handleActivatedEvent = async (webhookData) => {
   const {
@@ -22,11 +23,11 @@ export const handleActivatedEvent = async (webhookData) => {
     return "Subscription not found:";
   }
   subscription.status = status;
-  subscription.currentStart = current_start * 1000;
-  subscription.currentEnd = current_end * 1000;
-  subscription.startAt = start_at * 1000;
-  subscription.invoiceId = webhookData.payload.payment.entity.invoice_id;
-  subscription.endAt = end_at * 1000;
+  subscription.currentStart = current_start ? current_start * 1000 : new Date();
+  subscription.currentEnd = current_end ? current_end * 1000 : null;
+  subscription.startAt = start_at ? start_at * 1000 : new Date();
+  subscription.invoiceId = webhookData.payload?.payment?.entity?.invoice_id || null;
+  subscription.endAt = end_at ? end_at * 1000 : null;
   await subscription.save();
 
   const planDetails = getPlanById(plan_id);
@@ -41,4 +42,14 @@ export const handleActivatedEvent = async (webhookData) => {
   user.maxFileSize = planDetails.maxFileSizeBytes;
   user.restoreFileDays = planDetails.restoreFileDays;
   await user.save();
+
+  try {
+    sendEventToUser(userId, {
+      type: "subscriptionActivated",
+      txnId: webhookData.payload?.payment?.entity?.id || id,
+      subscriptionId: id,
+    });
+  } catch (sseErr) {
+    console.warn("SSE notification failed:", sseErr.message);
+  }
 };

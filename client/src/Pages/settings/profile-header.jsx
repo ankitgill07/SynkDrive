@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -18,6 +18,15 @@ export function ProfileHeader() {
   const [tempEmail, setTempEmail] = useState(email);
   const [tempAvatarUrl, setTempAvatarUrl] = useState(avatarUrl);
   const fileInputRef = useRef(null);
+
+  useEffect(() => {
+    if (user) {
+      setName(user.name || "");
+      setEmail(user.email || "");
+      setAvatarUrl(user.picture || null);
+      setSelectImage(user.picture || null);
+    }
+  }, [user]);
 
   const handleEdit = () => {
     setIsEditing(true);
@@ -41,7 +50,10 @@ export function ProfileHeader() {
     setIsLoading(true);
     try {
       const formData = new FormData();
-      (formData.append("name", tempName), formData.append("file", selectImage));
+      formData.append("name", tempName);
+      if (selectImage instanceof File) {
+        formData.append("file", selectImage);
+      }
       const result = await updatedProfileApi(formData);
       if (result.success) {
         setName(tempName);
@@ -67,6 +79,15 @@ export function ProfileHeader() {
       };
       reader.readAsDataURL(file);
     }
+  };
+
+  const getPlanName = (user) => {
+    if (!user) return "Free";
+    const planId = user.planId || "free";
+    if (planId === "plan_Si1gZRtrnRwauf") return "Basic";
+    if (planId === "plan_ShbAnQqzVwui43") return "Pro";
+    if (planId === "plan_Si1g6y6HLTrVjZ") return "Premium";
+    return "Free";
   };
 
   return (
@@ -128,13 +149,24 @@ export function ProfileHeader() {
             <div className="flex gap-3 pt-2">
               <Button
                 onClick={handleSave}
+                disabled={isLoading}
                 className="bg-[#155dfc] text-white hover:bg-[#155dfc]/90 gap-2"
               >
-                <Check className="w-4 h-4" />
-                Save Changes
+                {isLoading ? (
+                  <>
+                    <span className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent mr-1" />
+                    Saving...
+                  </>
+                ) : (
+                  <>
+                    <Check className="w-4 h-4" />
+                    Save Changes
+                  </>
+                )}
               </Button>
               <Button
                 onClick={handleCancel}
+                disabled={isLoading}
                 variant="outline"
                 className="border-border"
               >
@@ -157,7 +189,7 @@ export function ProfileHeader() {
                   Account Status:
                 </span>
                 <span className="px-3 py-1 bg-accent/10 text-accent text-sm font-medium rounded-full">
-                  Premium
+                  {getPlanName(user)}
                 </span>
               </div>
               <p className="text-muted-foreground text-sm">

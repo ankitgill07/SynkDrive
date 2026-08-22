@@ -3,11 +3,13 @@ import { setFolders } from "@/lib/FolderSlice";
 import React, { useEffect, useState } from "react";
 import { useDispatch } from "react-redux";
 import { useNavigate, useParams } from "react-router-dom";
+import { useFilePreview } from "@/contextApi/FilePreviewContext";
 
 function useFolder() {
   const [breadCrumb, setBreadCrumb] = useState([]);
   const [starred, setStarred] = useState(false);
   const dispatch = useDispatch();
+  const { previewFile } = useFilePreview();
 
   const { id } = useParams();
   const navigate = useNavigate();
@@ -32,9 +34,7 @@ function useFolder() {
     if (folder.type === "folder") {
       return navigate(`/drive/folder/${folder._id}`);
     } else if (folder.type === "file") {
-      return window.open(
-        `${import.meta.env.VITE_BACKEND_BASE_URL}/file/${folder._id}`,
-      );
+      previewFile(folder);
     }
   };
 

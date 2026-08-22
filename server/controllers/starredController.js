@@ -1,6 +1,6 @@
 import File from "../models/fileModel.js";
 import Folder from "../models/folderModel.js ";
-import { ObjectId } from "mongodb";
+import mongoose from "mongoose";
 
 
 export const getAllStarredItmes = async (req, res) => {
@@ -17,7 +17,7 @@ export const getAllStarredItmes = async (req, res) => {
 };
 
 export const addFileToStarred = async (req, res) => {
-  const fileId = new ObjectId(req.params.id);
+  const fileId = new mongoose.Types.ObjectId(req.params.id);
   try {
     await File.findOneAndUpdate(
       { _id: fileId, userId: req.user._id },
@@ -31,7 +31,7 @@ export const addFileToStarred = async (req, res) => {
 };
 
 export const addFolderTreeToStarred = async (req, res) => {
-  const id = new ObjectId(req.params.id);
+  const id = new mongoose.Types.ObjectId(req.params.id);
   try {
     await Folder.findByIdAndUpdate(
       { _id: id, userId: req.user._id },

@@ -16,9 +16,19 @@ import { useDispatch, useSelector } from "react-redux";
 import { setFolders } from "@/lib/FolderSlice";
 import useRecycle from "@/hooks/useRecycle";
 import RecycleSortListLayout from "./GridView/RecycleSortListLayout";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 function RecycleBin() {
-  const { checkAuthorization } = userAuth();
+  const { checkAuthorization, user } = userAuth();
 
   const {
     fetchRicycleData,
@@ -36,14 +46,25 @@ function RecycleBin() {
     .filter((item) => item.selected)
     .map((item) => item._id);
 
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+
   const handleBulkDeletePermanetly = async () => {
-    const result = await bulkDeleteParmanetlyApi(selectedIds);
-    if (result.success) {
-      toast.success(result.data);
-      checkAuthorization();
-      fetchRicycleData();
-    } else {
-      toast.error(result.message);
+    setIsDeleting(true);
+    try {
+      const result = await bulkDeleteParmanetlyApi(selectedIds);
+      if (result.success) {
+        toast.success(result.data);
+        checkAuthorization();
+        fetchRicycleData();
+      } else {
+        toast.error(result.message);
+      }
+    } catch (err) {
+      toast.error("Failed to permanently delete selected items");
+    } finally {
+      setIsDeleting(false);
+      setDeleteConfirmOpen(false);
     }
   };
 
@@ -66,7 +87,13 @@ function RecycleBin() {
           ""
         )}
         <button
-          onClick={handleBulkDeletePermanetly}
+          onClick={() => {
+            if (selectedIds.length === 0) {
+              toast.error("No items selected");
+              return;
+            }
+            setDeleteConfirmOpen(true);
+          }}
           className={`flex items-center gap-1 cursor-pointer
        font-inter bg-[#d9d4cc3b] text-gray-800 hover:bg-[#e9e8e8]
       rounded-full px-5 py-1.5 font-medium text-sm 
@@ -75,6 +102,34 @@ function RecycleBin() {
           <Trash size={18} className="" />
           Delete
         </button>
+
+        <AlertDialog open={deleteConfirmOpen} onOpenChange={setDeleteConfirmOpen}>
+          <AlertDialogContent className="bg-card border-border">
+            <AlertDialogHeader>
+              <AlertDialogTitle className="text-red-600">
+                Permanently Delete Selected Items?
+              </AlertDialogTitle>
+              <AlertDialogDescription className="text-muted-foreground">
+                Are you sure you want to permanently delete the {selectedIds.length} selected items? This action cannot be undone.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel disabled={isDeleting} className="bg-secondary text-foreground border-border hover:bg-secondary/80">
+                Cancel
+              </AlertDialogCancel>
+              <AlertDialogAction
+                onClick={(e) => {
+                  e.preventDefault();
+                  handleBulkDeletePermanetly();
+                }}
+                disabled={isDeleting}
+                className="bg-red-600 hover:bg-red-700 text-white flex items-center gap-2"
+              >
+                {isDeleting ? "Deleting..." : "Delete Permanently"}
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
         <button
           onClick={handleRestoreData}
           className={`flex items-center gap-1 cursor-pointer
@@ -94,6 +149,7 @@ function RecycleBin() {
               key={folder._id}
               folder={folder}
               allItems={fetchRicycleData}
+              restoreFileDays={user?.restoreFileDays || 30}
             />
           </div>
         ))}

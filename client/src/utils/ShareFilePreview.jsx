@@ -1,245 +1,177 @@
-function    ShareFilePreview({ file }) {
-  const getFileExtension = (name) => {
-    return name?.split(".").pop()?.toLowerCase() || "file";
-  };
+import {
+  Archive,
+  Code2,
+  Download,
+  File,
+  FileAudio,
+  FileSpreadsheet,
+  FileText,
+  FileVideo,
+  ImageIcon,
+  Presentation,
+} from "lucide-react";
+import { formatSize } from "./Helpers";
 
-  const ext = getFileExtension(file.name);
+const imageExtensions = ["jpg", "jpeg", "png", "gif", "webp", "svg", "bmp"];
+const audioExtensions = ["mp3", "wav", "m4a", "aac", "flac", "ogg"];
+const videoExtensions = ["mp4", "mkv", "mov", "avi", "webm", "flv"];
+const documentExtensions = ["doc", "docx", "pdf", "txt", "md", "rtf"];
+const spreadsheetExtensions = ["xls", "xlsx", "csv"];
+const presentationExtensions = ["ppt", "pptx"];
+const codeExtensions = [
+  "js",
+  "jsx",
+  "ts",
+  "tsx",
+  "py",
+  "html",
+  "css",
+  "json",
+  "xml",
+  "java",
+  "cpp",
+  "rb",
+];
+const archiveExtensions = ["zip", "rar", "7z", "tar", "gz"];
 
-  const renderPreview = () => {
-    switch (true) {
-          
-      case ["jpg", "jpeg", "png", "gif", "webp", "svg", "bmp"].includes(ext):
-        return (
-          <div className="flex items-center justify-center h-full w-full">
-            <img
-              src={file.url}
-              alt={file.name}
-              className="max-w-full max-h-full object-contain"
-            />
-          </div>
-        );
+function getFileExtension(file) {
+  const source = file?.extension || file?.name || "";
+  return source.replace(/^\./, "").split(".").pop()?.toLowerCase() || "file";
+}
 
-      case ext === "pdf":
-        return (
-    <iframe
-  src={`${file.url}#toolbar=0`}
-  title={file.name}
-  className="w-full h-full bg-transparent border-0"
-/>
-        );
+function getFileType(ext) {
+  if (imageExtensions.includes(ext)) return "Image";
+  if (ext === "pdf") return "PDF document";
+  if (audioExtensions.includes(ext)) return "Audio file";
+  if (videoExtensions.includes(ext)) return "Video file";
+  if (["doc", "docx", "rtf"].includes(ext)) return "Document";
+  if (["txt", "md"].includes(ext)) return "Text document";
+  if (spreadsheetExtensions.includes(ext)) return ext === "csv" ? "CSV file" : "Spreadsheet";
+  if (presentationExtensions.includes(ext)) return "Presentation";
+  if (codeExtensions.includes(ext)) return "Code file";
+  if (archiveExtensions.includes(ext)) return "Archive";
+  return "File";
+}
 
-      // Audio
-      case ["mp3", "wav", "m4a", "aac", "flac"].includes(ext):
-        return (
-          <div className="flex flex-col items-center justify-center gap-6">
-            <div className="w-32 h-32 rounded-2xl bg-gradient-to-br from-pink-500 to-pink-600 flex items-center justify-center shadow-lg">
-              <svg
-                className="w-16 h-16 text-white"
-                fill="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path d="M12 3v9.28c-.47-.46-1.12-.75-1.84-.75-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3V7h4V3h-5z" />
-              </svg>
-            </div>
-            <audio controls className="w-full max-w-md">
-              <source src={file.url} type={`audio/${ext}`} />
-              Your browser does not support audio playback.
-            </audio>
-            <h2 className="text-2xl font-bold text-slate-900 text-center break-all max-w-2xl">
-              {file.name}
-            </h2>
-            <p className="text-slate-500 text-sm">
-              {ext.toUpperCase()} Audio File
-            </p>
-          </div>
-        );
+function getFallbackMeta(ext) {
+  if (spreadsheetExtensions.includes(ext)) {
+    return { Icon: FileSpreadsheet, color: "text-emerald-600", bg: "bg-emerald-50" };
+  }
+  if (presentationExtensions.includes(ext)) {
+    return { Icon: Presentation, color: "text-orange-600", bg: "bg-orange-50" };
+  }
+  if (codeExtensions.includes(ext)) {
+    return { Icon: Code2, color: "text-amber-600", bg: "bg-amber-50" };
+  }
+  if (archiveExtensions.includes(ext)) {
+    return { Icon: Archive, color: "text-yellow-700", bg: "bg-yellow-50" };
+  }
+  if (audioExtensions.includes(ext)) {
+    return { Icon: FileAudio, color: "text-pink-600", bg: "bg-pink-50" };
+  }
+  if (videoExtensions.includes(ext)) {
+    return { Icon: FileVideo, color: "text-violet-600", bg: "bg-violet-50" };
+  }
+  if (imageExtensions.includes(ext)) {
+    return { Icon: ImageIcon, color: "text-rose-600", bg: "bg-rose-50" };
+  }
+  if (documentExtensions.includes(ext)) {
+    return { Icon: FileText, color: "text-blue-600", bg: "bg-blue-50" };
+  }
+  return { Icon: File, color: "text-slate-600", bg: "bg-slate-50" };
+}
 
-      // Video
-      case ["mp4", "mkv", "mov", "avi", "webm", "flv"].includes(ext):
-        return (
-          <div className="flex items-center justify-center h-full w-full">
-            <video controls className="max-w-full max-h-full rounded-lg">
-              <source src={file.url} type={`video/${ext}`} />
-              Your browser does not support video playback.
-            </video>
-          </div>
-        );
-
-      // Documents (PDF, Word, etc.)
-      case ["doc", "docx"].includes(ext):
-        return (
-          <div className="flex flex-col items-center justify-center gap-4">
-            <div className="w-32 h-32 rounded-2xl bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center shadow-lg">
-              <svg
-                className="w-16 h-16 text-white"
-                fill="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path d="M19 2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-5 18H5v-2h9v2zm5-4H5V4h14v12z" />
-              </svg>
-            </div>
-            <h2 className="text-2xl font-bold text-slate-900 text-center break-all max-w-2xl">
-              {file.name}
-            </h2>
-            <p className="text-blue-600 text-lg font-semibold">
-              {ext === "pdf" ? "PDF Document" : "Word Document"}
-            </p>
-            <p className="text-slate-500 text-sm">
-              {ext.toUpperCase()} • 12.4 MB
-            </p>
-            <a
-              href={file.url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="px-6 py-2 mt-4 text-white bg-blue-600 hover:bg-blue-700 rounded-lg font-medium transition-colors"
-            >
-              Open Document
-            </a>
-          </div>
-        );
-
-      // Spreadsheets
-      case ["xls", "xlsx", "csv"].includes(ext):
-        return (
-          <div className="flex flex-col items-center justify-center gap-4">
-            <div className="w-32 h-32 rounded-2xl bg-gradient-to-br from-green-500 to-green-600 flex items-center justify-center shadow-lg">
-              <svg
-                className="w-16 h-16 text-white"
-                fill="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path d="M19 2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zM9 11H7v2h2v-2zm4 0h-2v2h2v-2zm4 0h-2v2h2v-2zm-8-4h2V5h-2v2zm4 0h2V5h-2v2zm4 0h2V5h-2v2z" />
-              </svg>
-            </div>
-            <h2 className="text-2xl font-bold text-slate-900 text-center break-all max-w-2xl">
-              {file.name}
-            </h2>
-            <p className="text-green-600 text-lg font-semibold">
-              {ext === "csv" ? "CSV File" : "Excel Spreadsheet"}
-            </p>
-            <p className="text-slate-500 text-sm">
-              {ext.toUpperCase()} • 12.4 MB
-            </p>
-          </div>
-        );
-
-      // Presentations
-      case ["ppt", "pptx"].includes(ext):
-        return (
-          <div className="flex flex-col items-center justify-center gap-4">
-            <div className="w-32 h-32 rounded-2xl bg-gradient-to-br from-orange-500 to-orange-600 flex items-center justify-center shadow-lg">
-              <svg
-                className="w-16 h-16 text-white"
-                fill="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path d="M19 2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-5 18H5v-2h9v2zm5-4H5V4h14v12z" />
-              </svg>
-            </div>
-            <h2 className="text-2xl font-bold text-slate-900 text-center break-all max-w-2xl">
-              {file.name}
-            </h2>
-            <p className="text-orange-600 text-lg font-semibold">
-              PowerPoint Presentation
-            </p>
-            <p className="text-slate-500 text-sm">
-              {ext.toUpperCase()} • 12.4 MB
-            </p>
-          </div>
-        );
-
-      // Code Files
-      case [
-        "js",
-        "jsx",
-        "ts",
-        "tsx",
-        "py",
-        "html",
-        "css",
-        "json",
-        "xml",
-        "java",
-        "cpp",
-        "rb",
-      ].includes(ext):
-        return (
-          <div className="flex flex-col items-center justify-center gap-4">
-            <div className="w-32 h-32 rounded-2xl bg-gradient-to-br from-amber-500 to-amber-600 flex items-center justify-center shadow-lg">
-              <svg
-                className="w-16 h-16 text-white"
-                fill="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path d="M9.4 16.6L4.8 12l4.6-4.6L6.6 6l-6 6 6 6 2.8-2.4zm5.2 0l4.6-4.6-4.6-4.6 2.8-2.8 6 6-6 6-2.8-2.4z" />
-              </svg>
-            </div>
-            <h2 className="text-2xl font-bold text-slate-900 text-center break-all max-w-2xl">
-              {file.name}
-            </h2>
-            <p className="text-amber-600 text-lg font-semibold">Code File</p>
-            <p className="text-slate-500 text-sm">
-              {ext.toUpperCase()} • 12.4 MB
-            </p>
-          </div>
-        );
-
-      // Archives
-      case ["zip", "rar", "7z", "tar", "gz"].includes(ext):
-        return (
-          <div className="flex flex-col items-center justify-center gap-4">
-            <div className="w-32 h-32 rounded-2xl bg-gradient-to-br from-yellow-500 to-yellow-600 flex items-center justify-center shadow-lg">
-              <svg
-                className="w-16 h-16 text-white"
-                fill="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path d="M19.35 10.04C18.67 6.59 15.64 4 12 4c-1.48 0-2.85.43-4.01 1.17l1.46 1.46C10.21 5.23 11.08 5 12 5c3.04 0 5.5 2.46 5.5 5.5v.5H19c1.66 0 3 1.34 3 3 0 1.13-.64 2.11-1.56 2.62l1.45 1.45c.67-.33 1.25-.77 1.72-1.31.85-.89 1.39-2.1 1.39-3.42 0-2.05-1.53-3.76-3.56-3.97z" />
-              </svg>
-            </div>
-            <h2 className="text-2xl font-bold text-slate-900 text-center break-all max-w-2xl">
-              {file.name}
-            </h2>
-            <p className="text-yellow-600 text-lg font-semibold">
-              Archive File
-            </p>
-            <p className="text-slate-500 text-sm">
-              {ext.toUpperCase()} • 12.4 MB
-            </p>
-          </div>
-        );
-
-      // Default/Unknown file types
-      default:
-        return (
-          <div className="flex flex-col items-center justify-center gap-4">
-            <div className="w-32 h-32 rounded-2xl bg-gradient-to-br from-slate-500 to-slate-600 flex items-center justify-center shadow-lg">
-              <svg
-                className="w-16 h-16 text-white"
-                fill="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8l-6-6z" />
-              </svg>
-            </div>
-            <h2 className="text-2xl font-bold text-slate-900 text-center break-all max-w-2xl">
-              {file.name}
-            </h2>
-            <p className="text-slate-600 text-lg font-semibold">File</p>
-            <p className="text-slate-500 text-sm">
-              {ext.toUpperCase()} • 12.4 MB
-            </p>
-          </div>
-        );
-    }
-  };
+function FallbackPreview({ file, ext }) {
+  const { Icon, color, bg } = getFallbackMeta(ext);
+  const fileType = getFileType(ext);
+  const size = Number.isFinite(file?.size) ? formatSize(file.size) : null;
 
   return (
-    <div className="w-full h-full flex items-center justify-center">
-      {renderPreview()}
+    <div className="flex h-full w-full items-center justify-center p-4 text-center">
+      <div className="flex max-w-md flex-col items-center gap-4">
+        <div className={`flex h-24 w-24 items-center justify-center rounded-2xl ${bg}`}>
+          <Icon className={`h-12 w-12 ${color}`} />
+        </div>
+        <div className="min-w-0 space-y-2">
+          <h2 className="break-words text-xl font-bold text-slate-900 sm:text-2xl">
+            {file?.name || "Shared file"}
+          </h2>
+          <p className="text-sm font-medium text-slate-500">
+            {[ext.toUpperCase(), fileType, size].filter(Boolean).join(" | ")}
+          </p>
+        </div>
+        {file?.url && (
+          <a
+            href={file.url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-2 rounded-md bg-blue-600 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-blue-700"
+          >
+            <Download className="h-4 w-4" />
+            Open file
+          </a>
+        )}
+      </div>
     </div>
   );
 }
 
+function ShareFilePreview({ file }) {
+  const ext = getFileExtension(file);
 
-export default ShareFilePreview
+  if (!file?.url) {
+    return <FallbackPreview file={file} ext={ext} />;
+  }
+
+  if (imageExtensions.includes(ext)) {
+    return (
+      <div className="flex h-full w-full items-center justify-center">
+        <img
+          src={file.url}
+          alt={file.name || "Shared file preview"}
+          className="max-h-full max-w-full rounded-md object-contain"
+        />
+      </div>
+    );
+  }
+
+  if (ext === "pdf" || ["txt", "md"].includes(ext)) {
+    return (
+      <iframe
+        src={ext === "pdf" ? `${file.url}#toolbar=0` : file.url}
+        title={file.name || "Shared file preview"}
+        className="h-full min-h-[65vh] w-full rounded-md border border-slate-200 bg-white"
+      />
+    );
+  }
+
+  if (audioExtensions.includes(ext)) {
+    return (
+      <div className="flex h-full w-full items-center justify-center p-4">
+        <div className="w-full max-w-xl space-y-5 rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
+          <FallbackPreview file={file} ext={ext} />
+          <audio controls className="w-full">
+            <source src={file.url} type={`audio/${ext}`} />
+            Your browser does not support audio playback.
+          </audio>
+        </div>
+      </div>
+    );
+  }
+
+  if (videoExtensions.includes(ext)) {
+    return (
+      <div className="flex h-full w-full items-center justify-center">
+        <video controls className="max-h-full max-w-full rounded-md bg-black">
+          <source src={file.url} type={`video/${ext}`} />
+          Your browser does not support video playback.
+        </video>
+      </div>
+    );
+  }
+
+  return <FallbackPreview file={file} ext={ext} />;
+}
+
+export { getFileExtension, getFileType };
+export default ShareFilePreview;

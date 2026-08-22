@@ -4,7 +4,7 @@ import {
   uploadInitiateApi,
 } from "@/api/fileApi";
 import useGlobalProgress from "@/hooks/useGlobalProgress";
-import { createContext, useContext, useState } from "react";
+import { createContext, useContext, useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { toast } from "sonner";
 import { userAuth } from "./AuthContext";
@@ -19,6 +19,13 @@ export const FileProgressProvider = ({ children }) => {
   const [anchorEl, setAnchorEl] = useState(null);
   const open = Boolean(anchorEl);
 
+  const addProgressFiles = (files) => {
+    setProgress((prev) => [
+      ...prev,
+      ...files.filter((file) => !prev.some((item) => item.id === file.id)),
+    ]);
+  };
+
   const handleClick = (event) => {
     setAnchorEl(event.currentTarget);
   };
@@ -26,6 +33,33 @@ export const FileProgressProvider = ({ children }) => {
   const handleClose = () => {
     setAnchorEl(null);
   };
+
+  useEffect(() => {
+    const userId = user?.id || user?._id;
+    if (!userId || !import.meta.env.VITE_BACKEND_BASE_URL) return;
+
+    const eventSource = new EventSource(
+      `${import.meta.env.VITE_BACKEND_BASE_URL}/events?userId=${userId}`,
+    );
+
+    eventSource.onmessage = (event) => {
+      try {
+        const data = JSON.parse(event.data);
+        if (data.type === "driveImportProgress" && data.importId) {
+          updateProgress(data.importId, data.progress);
+        }
+      } catch (error) {
+        console.error("Progress event parse error:", error);
+      }
+    };
+
+    eventSource.onerror = () => {
+      eventSource.close();
+    };
+
+    return () => eventSource.close();
+  }, [user?.id, user?._id]);
+
   const processFiles = async (selectedFiles) => {
     if (selectedFiles.length === 0) return;
     handleClose();
@@ -41,7 +75,7 @@ export const FileProgressProvider = ({ children }) => {
           type: file.type,
         });
 
-        const { uploadUrl, fileId } = result?.data;
+        const { uploadUrl, fileId, contentType } = result?.data || {};
         setProgress((prev) => [
           ...prev,
           {
@@ -57,6 +91,7 @@ export const FileProgressProvider = ({ children }) => {
           uploadUrl,
           fileId,
           file,
+          contentType,
           updateProgress,
         );
         if (s3Result === 200) {
@@ -79,6 +114,8 @@ export const FileProgressProvider = ({ children }) => {
         handleFileChange,
         processFiles,
         progress,
+        addProgressFiles,
+        updateProgress,
         handleClick,
         open,
         anchorEl,

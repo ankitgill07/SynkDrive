@@ -20,7 +20,12 @@ const folderSlice = createSlice({
     },
     selectAll: (state) => {
       state.items.forEach((item) => {
-        item.selected = !item.selected;
+        item.selected = true;
+      });
+    },
+    deselectAll: (state) => {
+      state.items.forEach((item) => {
+        item.selected = false;
       });
     },
     deleteSelectedItems: (state) => {
@@ -29,6 +34,6 @@ const folderSlice = createSlice({
   },
 });
 
-export const { setFolders, selectAll, toggleItems, deleteSelectedItems } =
+export const { setFolders, selectAll, deselectAll, toggleItems, deleteSelectedItems } =
   folderSlice.actions;
 export default folderSlice.reducer;

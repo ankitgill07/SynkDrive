@@ -12,6 +12,8 @@ import {
   FaFileArchive,
 } from "react-icons/fa";
 import { SiJson, SiTypescript } from "react-icons/si";
+import { Field, FieldGroup } from "@/components/ui/field";
+import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 export const renderFilePreview = ({ file, size = 20 }) => {
   let extension = "";
@@ -137,7 +139,9 @@ export function formatTimestamp(timestamp, timeZone = "UTC") {
   });
 }
 
-export function SelectionCheckbox({ isSelected }) {
+export function SelectionCheckbox({ isSelected, isSelectionMode }) {
+  const showBackground = isSelected === true || isSelected === "indeterminate";
+
   return (
     <div
       className={`
@@ -145,22 +149,38 @@ export function SelectionCheckbox({ isSelected }) {
     rounded-[5px] cursor-pointer
     transition-all duration-200 ease-out
     ${
-      !isSelected
+      !showBackground
         ? "bg-white border-[1.5px]  shadow-sm border-black hover:bg-blue-50/30"
         : "bg-[#0061FF] border-[1.5px] border-[#0061FF] shadow-[0_2px_8px_rgba(0,97,255,0.3)]"
     }
 
     /* Logic to show on folder hover or when selected */
     ${
-      isSelected
+      showBackground || isSelectionMode
         ? "opacity-100 scale-100"
         : "opacity-0 scale-95 group-hover:opacity-100 group-hover:scale-100"
     }
   `}
     >
-      <svg
-        viewBox="0 0 24 24"
-        className={`
+      {isSelected === "indeterminate" ? (
+        <svg
+          viewBox="0 0 24 24"
+          className="w-3.5 h-3.5 text-white"
+        >
+          <line
+            x1="5"
+            y1="12"
+            x2="19"
+            y2="12"
+            stroke="currentColor"
+            strokeWidth="3.5"
+            strokeLinecap="round"
+          />
+        </svg>
+      ) : (
+        <svg
+          viewBox="0 0 24 24"
+          className={`
       w-3.5 h-3.5 text-white transition-all duration-300 transform
       ${
         isSelected
@@ -168,24 +188,116 @@ export function SelectionCheckbox({ isSelected }) {
           : "opacity-0 scale-50 translate-y-1"
       }
     `}
-      >
-        <path
-          d="M5 13l4 4L19 7"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="3.5"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        />
-      </svg>
+        >
+          <path
+            d="M5 13l4 4L19 7"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="3.5"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+        </svg>
+      )}
 
       <div
         className={`
     absolute -inset-1 rounded-2xl border-2 
     transition-opacity duration-200 pointer-events-none
-    ${isSelected ? "opacity-0" : "opacity-0 group-focus-within:opacity-100"}
+    ${showBackground ? "opacity-0" : "opacity-0 group-focus-within:opacity-100"}
   `}
       />
     </div>
   );
 }
+
+export function selectRole() {
+return (
+    <FieldGroup className="w-full max-w-xs ">
+    <Field>
+      <Select defaultValue="view">
+        <SelectTrigger>
+          <SelectValue />
+        </SelectTrigger>
+        <SelectContent position="popper" className=" overflow-y-auto ">
+          <SelectGroup>
+            <SelectItem value="view">View</SelectItem>
+            <SelectItem value="edit">Edit</SelectItem>
+          </SelectGroup>
+        </SelectContent>
+      </Select>
+    </Field>
+  </FieldGroup>
+)
+}
+
+export const getMimeType = (fileName) => {
+  if (!fileName) return "application/octet-stream";
+  const parts = fileName.split(".");
+  if (parts.length <= 1) return "application/octet-stream";
+  const ext = parts.pop().toLowerCase();
+  
+  const mimeTypes = {
+    // Images
+    png: "image/png",
+    jpg: "image/jpeg",
+    jpeg: "image/jpeg",
+    gif: "image/gif",
+    webp: "image/webp",
+    svg: "image/svg+xml",
+    ico: "image/x-icon",
+    bmp: "image/bmp",
+    tiff: "image/tiff",
+    
+    // Audio
+    mp3: "audio/mpeg",
+    wav: "audio/wav",
+    ogg: "audio/ogg",
+    m4a: "audio/mp4",
+    aac: "audio/aac",
+    flac: "audio/flac",
+
+    // Video
+    mp4: "video/mp4",
+    webm: "video/webm",
+    avi: "video/x-msvideo",
+    mov: "video/quicktime",
+    mkv: "video/x-matroska",
+    flv: "video/x-flv",
+
+    // Documents
+    pdf: "application/pdf",
+    doc: "application/msword",
+    docx: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    xls: "application/vnd.ms-excel",
+    xlsx: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    ppt: "application/vnd.ms-powerpoint",
+    pptx: "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+    txt: "text/plain",
+    html: "text/html",
+    css: "text/css",
+    js: "application/javascript",
+    json: "application/json",
+    xml: "application/xml",
+    csv: "text/csv",
+    rtf: "application/rtf",
+    md: "text/markdown",
+
+    // Archives
+    zip: "application/zip",
+    rar: "application/vnd.rar",
+    tar: "application/x-tar",
+    gz: "application/gzip",
+    "7z": "application/x-7z-compressed",
+
+    // Executables/Binaries
+    exe: "application/x-msdownload",
+    msi: "application/x-msdownload",
+    apk: "application/vnd.android.package-archive",
+    dmg: "application/x-apple-diskimage",
+    iso: "application/x-iso9660-image"
+  };
+
+  return mimeTypes[ext] || "application/octet-stream";
+};
+

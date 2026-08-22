@@ -4,7 +4,6 @@ import authRouter from "./routers/authRouter.js";
 import folderRouter from "./routers/folderRouter.js";
 import fileRouter from "./routers/fileRouter.js";
 import photoRouter from "./routers/photoRouter.js";
-import connetDB from "./db/db.js";
 import cookieParser from "cookie-parser";
 import cors from "cors";
 import { checkAuth } from "./middlewares/authMiddleware.js";
@@ -19,15 +18,15 @@ import subscriptionRouter from "./routers/subscriptionRouter.js";
 import webhookRouter from "./routers/webhookRouter.js";
 import helmet from "helmet";
 import { eventController } from "./controllers/eventController.js";
-import { startCronJob } from "./cron/index.js";
-
-const app = express();
-
-const PORT = process.env.PORT || 4000;
+import { getShareWithLink } from "./controllers/shareContoller.js";
+import { Limiter } from "./utils/RateLimiter.js";
+import adminRouter from "./routers/adminRouter.js";
+import connetDB from "./db/db.js";
 
 await connetDB();
+const app = express();
 
-startCronJob();
+
 
 app.use(helmet());
 app.use(express.json());
@@ -53,69 +52,23 @@ app.use(
   }),
 );
 
-app.post("/github-webhook", (req, res) => {
-  const getWebhookSignature = req.headers["x-hub-signature-256"];
-  if (!getWebhookSignature) {
-    return res.status(403).json({ error: "Signature not received" });
-  }
 
-  const calculateWebhookSignature =
-    "sha256=" +
-    crypto
-      .createHmac("sha256", "ankit@123")
-      .update(JSON.stringify(req.body))
-      .digest("hex");
-
-  if (getWebhookSignature !== calculateWebhookSignature) {
-    return res.status(403).json({ error: "Invalid Signature" });
-  }
-  res.json({ message: "Ok" });
-  const commits = req.body.commits || [];
-
-  const changedFiles = commits.flatMap((commit) => [
-    ...commit.added,
-    ...commit.modified,
-    ...commit.removed,
-  ]);
-
-  const clientChanged = changedFiles.some((file) => file.startsWith("client/"));
-  const serverChanged = changedFiles.some((file) => file.startsWith("server/"));
-
-  if (!clientChanged && !serverChanged) {
-    return res.json({ message: "No relevant changes, skipping deploy" });
-  }
-
-  function runScript(script) {
-    console.log(`Running: ${script}`);
-    const proc = spawn("bash", [script]);
-
-    proc.stdout.on("data", (data) => process.stdout.write(data));
-    proc.stderr.on("data", (data) => process.stderr.write(data));
-
-    proc.on("close", (code) => {
-      if (code === 0) {
-        console.log(`✅ ${script} completed successfully`);
-      } else {
-        console.log(`❌ ${script} failed with code ${code}`);
-      }
-    });
-
-    proc.on("error", (err) => {
-      console.error(`Error spawning ${script}:`, err);
-    });
-  }
-
-  if (clientChanged) runScript("/home/ubuntu/deploy-client.sh");
-  if (serverChanged) runScript("/home/ubuntu/deploy-server.sh");
-});
 
 app.use("/auth", authRouter);
 
 app.use("/user", checkAuth, userRouter);
 
+app.use("/admin", adminRouter);
+
 app.use("/folder", checkAuth, folderRouter);
 
 app.use("/file", checkAuth, fileRouter);
+
+app.get(
+  "/share/public/file/:fileId",
+  Limiter.filePublicAccess(),
+  getShareWithLink,
+);
 
 app.use("/share", checkAuth, shareRoutter);
 
@@ -140,6 +93,8 @@ app.get("/", (req, res) => {
 
 app.use(errorHandler);
 
-app.listen(PORT, () => {
-  console.log(`Server started on port ${PORT}`);
-});
+app.listen(4000 , () => {
+  console.log("server start prot 4000");
+  
+})
+export default app

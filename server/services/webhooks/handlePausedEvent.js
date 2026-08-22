@@ -2,11 +2,11 @@ import Subscription from "../../models/subscriptionModal.js";
 import Users from "../../models/userModel.js";
 import { getPlanById } from "../../utils/getPlanDetails.js";
 import { disableUserService } from "../../utils/serviceControl.js";
-
+import { sendEventToUser } from "../../controllers/eventController.js";
 
 export const handlePausedEvent = async (webhookData) => {
   try {
-    const { id, status, notes, current_start, current_end } =
+    const { id, status, notes } =
       webhookData.payload.subscription.entity;
 
     if (!id || !status || !notes?.userId) {
@@ -28,18 +28,21 @@ export const handlePausedEvent = async (webhookData) => {
       throw new Error(`Subscription not found: ${id}`);
     }
 
-    if (subscription.status !== "active") {
-      throw new Error(
-        `Cannot paused subscription with status '${subscription.status}'`,
-      );
-    }
-
     subscription.status = status;
     subscription.pausedAt = new Date();
     await subscription.save();
-    disableUserService(userId);
+    await disableUserService(userId);
 
-    return;
+    try {
+      sendEventToUser(userId, {
+        type: "subscriptionPaused",
+        subscriptionId: id,
+      });
+    } catch (sseErr) {
+      console.warn("SSE notice:", sseErr.message);
+    }
+
+    return { success: true };
   } catch (error) {
     console.error("handlePausedEvent error:", error.message);
     throw error;

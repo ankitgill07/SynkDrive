@@ -4,10 +4,12 @@ import Folder from "../../models/folderModel.js";
 import File from "../../models/fileModel.js";
 import fs from "fs/promises";
 import path from "path";
-import { ObjectId } from "mongodb";
+import mongoose from "mongoose";
 import { s3UploadPresignedUrl } from "./s3Servies.js";
 import axios from "axios";
 import { getFolderSize } from "../../utils/helperUtil.js";
+
+const { ObjectId } = mongoose.Types;
 
 const EXPORT_FORMATS = {
   "application/vnd.google-apps.document": {
@@ -39,6 +41,7 @@ export const importGoogleDrive = async (
   accessToken,
   rootFolderId,
   userId,
+  onProgress = () => {},
 ) => {
   const oauth2Client = getAuthenticatedClient({ token: accessToken });
   const drive = google.drive({ version: "v3", auth: oauth2Client });
@@ -49,10 +52,10 @@ export const importGoogleDrive = async (
   try {
     if (exportMime) {
       response = await drive.files.export(
-        { fileId, mimeType: exportMime },
+        { fileId, mimeType: exportMime.mime },
         { responseType: "arraybuffer" },
       );
-      extension = EXPORT_EXTENSIONS[mimeType];
+      extension = exportMime.ext;
       finalName = sanitize(path.basename(name, path.extname(name))) + extension;
     } else {
       response = await drive.files.get(
@@ -60,6 +63,7 @@ export const importGoogleDrive = async (
         { responseType: "arraybuffer" },
       );
     }
+    onProgress(45);
 
     const folder = await Folder.findOne({
       name: "Google Drive",
@@ -82,15 +86,17 @@ export const importGoogleDrive = async (
       targetFolderId = folder._id;
     }
 
+    const importedSize = Number(size) || response.data?.byteLength || 0;
+
     const file = await File.create({
       name: finalName,
       parentFolderId: targetFolderId,
-      size,
+      size: importedSize,
       extension,
       userId,
     });
     let fullFileName = `${file._id}${extension}`;
-    const type = exportMime || mimeType;
+    const type = exportMime?.mime || mimeType;
     const uploadUrl = await s3UploadPresignedUrl(fullFileName, type);
 
     await axios.put(uploadUrl, response.data, {
@@ -98,8 +104,16 @@ export const importGoogleDrive = async (
         "Content-Type": type,
         "Content-Length": response.data.byteLength,
       },
+      onUploadProgress: (progressEvent) => {
+        if (!progressEvent.total) return;
+        const uploadPercent = Math.round(
+          (progressEvent.loaded * 50) / progressEvent.total,
+        );
+        onProgress(Math.min(95, 45 + uploadPercent));
+      },
     });
-    await getFolderSize(file.parentFolderId, file.size);
+    onProgress(98);
+    await getFolderSize(file.parentFolderId, importedSize);
   } catch (error) {
     throw error;
   }

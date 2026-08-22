@@ -2,8 +2,11 @@ import Users from "../models/userModel.js";
 import { sendOtpServService } from "../services/sendOptService.js";
 import OTP from "../models/otpModel.js";
 import { googleAuth } from "../services/googleAuthService.js";
-import { ObjectId } from "mongodb";
+import mongoose from "mongoose";
 import { setUserCookie } from "../utils/cookieUtil.js";
+import { cloudfrontSignedUrl } from "../services/file/cloudFront.js";
+import path from "path";
+
 import {
   createSocailUser,
   createUser,
@@ -48,8 +51,8 @@ try{
   await OTP.deleteOne();
 
 
-    const userId = new ObjectId();
-    const folderId = new ObjectId();
+    const userId = new mongoose.Types.ObjectId();
+    const folderId = new mongoose.Types.ObjectId();
 
     await createUser({ userId, folderId, name, email, password, trems });
     return successResponse(res, StatusCodes.CREATED, "Account Created");
@@ -62,50 +65,95 @@ export const userLogin = async (req, res, next) => {
   const { success, data, error } = loginValidate.safeParse(req.body);
 
   if (!success) {
-    res.status(403).json({ error: error.issues });
+    return res.status(403).json({ error: error.issues });
   }
 
   const { email, password } = data;
 
   try {
-    const user = await Users.findOne({ email });
+    const user = await Users.findOne({
+      email: { $regex: new RegExp(`^${email.trim()}$`, "i") }
+    });
 
-    if (user) {
-    } else if (user.isDisable) {
+    if (!user) {
+      return errorResponse(res, StatusCodes.UNAUTHORIZED, "Invalid Credentials");
+    }
+
+    if (user.isDisable) {
       return errorResponse(
         res,
         StatusCodes.FORBIDDEN,
         "Your account is deactivated. Please contact support for reactivation.",
       );
     }
+
     const verifyPassword = await user.comparePassword(password);
 
     if (!verifyPassword) {
-      return res.status(401).json({ error: "Invaild Credentials" });
+      return errorResponse(res, StatusCodes.UNAUTHORIZED, "Invalid Credentials");
     }
+
     user.loginWithPassword = true;
     await user.save();
     const parser = new UAParser(req.headers["user-agent"]);
     await logoutUserPreviewLoginDevice({ userId: user._id });
     await setUserCookie(res, user._id, parser);
-    res.status(201).json({ success: "Login Successfuly" });
+    return res.status(201).json({ success: "Login Successfuly", role: user.role });
   } catch (error) {
     next(error);
   }
 };
 
+import Subscription from "../models/subscriptionModal.js";
+
 export const userInfoData = async (req, res) => {
   const user = req.user;
   const rootFolder = await Folder.findById(user.rootFolderId);
+
+  let subscription = null;
+  if (user.subscriptionsId) {
+    subscription = await Subscription.findOne({
+      subscriptions_id: user.subscriptionsId,
+      userId: user._id,
+    });
+  }
+  if (!subscription) {
+    subscription = await Subscription.findOne({
+      userId: user._id,
+      status: { $in: ["active", "paused"] },
+    });
+  }
+
+  const hasActiveSubscription = !!(
+    subscription &&
+    (subscription.status === "active" || subscription.status === "paused")
+  );
+
+  let pictureUrl = user.picture;
+  if (pictureUrl && pictureUrl.startsWith("profile-pics/")) {
+    try {
+      pictureUrl = await cloudfrontSignedUrl({
+        key: pictureUrl,
+        fileName: `profile${path.extname(pictureUrl)}`,
+      });
+    } catch (err) {
+      console.error("Failed to sign CloudFront URL for profile picture:", err);
+    }
+  }
+
   res.status(200).json({
     id: user._id,
     name: user.name,
     email: user.email,
-    picture: user.picture,
+    picture: pictureUrl,
     maxStorageLimite: user.maxStorageLimite,
-    usedStorage: rootFolder.size,
+    usedStorage: rootFolder ? rootFolder.size : 0,
     role: user.role,
     maxFileSize: user.maxFileSize,
+    subscriptionsId: user.subscriptionsId,
+    subscriptionStatus: subscription ? subscription.status : "free",
+    hasActiveSubscription,
+    planId: subscription ? subscription.planId : "free",
     socialLogin: user.createdWith !== "email",
     socialProvider: user.createdWith === "email" ? null : user.createdWith,
     manualLogin: user.loginWithPassword,
@@ -143,8 +191,8 @@ export const loginWithgoogleAuth = async (req, res, next) => {
       await setUserCookie(res, user._id, parser);
       res.status(201).json({ success: "Login Successfuly" });
     } else {
-      const userId = new ObjectId();
-      const folderId = new ObjectId();
+      const userId = new mongoose.Types.ObjectId();
+      const folderId = new mongoose.Types.ObjectId();
       await createSocailUser({
         userId,
         folderId,
@@ -181,8 +229,8 @@ export const loginWithgithubAuth = async (req, res) => {
     if (user) {
       await setUserCookie(res, user._id);
     } else {
-      const userId = new ObjectId();
-      const folderId = new ObjectId();
+      const userId = new mongoose.Types.ObjectId();
+      const folderId = new mongoose.Types.ObjectId();
       createSocailUser({
         userId,
         folderId,

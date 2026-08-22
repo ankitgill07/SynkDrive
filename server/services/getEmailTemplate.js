@@ -1,5 +1,3 @@
-
-
 export const getEmailTemplate = ({ user, file, permission, url }) => {
   return `<!DOCTYPE html>
 <html lang="en">
@@ -42,9 +40,14 @@ export const getEmailTemplate = ({ user, file, permission, url }) => {
       background: #0061FF;
       padding: 32px 40px 28px;
     }
-    .sender-row { display: flex; align-items: center; gap: 14px; }
+   .sender-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
     .avatar {
       width: 46px; height: 46px;
+      margin-left: 5px;
       border-radius: 50%;
       background: rgba(255,255,255,0.25);
       display: flex; align-items: center; justify-content: center;
@@ -71,20 +74,16 @@ export const getEmailTemplate = ({ user, file, permission, url }) => {
     }
 
     /* File card */
-    .file-card {
-      background: #f8fafc;
-      border: 1px solid #e2e8f0;
-      border-radius: 12px;
-      padding: 16px 20px;
-      display: flex; align-items: center; gap: 14px;
-      margin-bottom: 28px;
-    }
-    .file-icon {
-      width: 42px; height: 42px;
-      background: #dbeafe; border-radius: 8px;
-      display: flex; align-items: center; justify-content: center;
-      flex-shrink: 0;
-    }
+.file-card {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 18px 20px;
+  display: flex;
+  align-items: center;
+}
+
+
     .file-name {
       font-size: 15px; font-weight: 600; color: #111827;
       white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
@@ -93,14 +92,19 @@ export const getEmailTemplate = ({ user, file, permission, url }) => {
 
     /* CTA button */
     .cta-btn {
-      display: block; text-align: center;
-      background: #0061FF; color: #ffffff;
-      text-decoration: none;
-      font-size: 15px; font-weight: 600;
-      padding: 14px 24px; border-radius: 10px;
-      letter-spacing: 0.01em;
+    display:block;
+    text-align:center;
+    background:#0061FF;
+    color:#ffffff !important;
+    text-decoration:none;
+    font-size:15px;
+    font-weight:600;
+    padding:14px 24px;
+    border-radius:10px;
+    margin:0 auto;
     }
     .cta-btn:hover { background: #0052d9; }
+
     .cta-note {
       font-size: 13px; color: #9ca3af;
       text-align: center; line-height: 1.6;
@@ -182,12 +186,12 @@ export const getEmailTemplate = ({ user, file, permission, url }) => {
 
       <!-- File card -->
       <div class="file-card">
-        <div class="file-icon">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" stroke="#2563eb" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-            <polyline points="14 2 14 8 20 8" stroke="#2563eb" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-          </svg>
-        </div>
+<img
+  src="https://synkdrive.in/assets/logo-eLGK6t9u.png"
+  width="32"
+  height="32"
+  alt="SynkDrive"
+/>
         <div style="flex:1; min-width:0;">
           <p class="file-name">${file.name}</p>
           <p class="file-meta">SynkDrive file</p>

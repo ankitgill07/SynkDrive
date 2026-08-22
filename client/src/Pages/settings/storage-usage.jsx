@@ -14,48 +14,46 @@ export function StorageUsage() {
   const storageBreakdown = [
     {
       name: "Documents",
-      size: 85.2,
+      size: usedStorage * 0.25,
       color: "bg-primary",
       icon: "📄",
       files: [
-        { name: "PDFs", size: 45.2 },
-        { name: "Word Docs", size: 25.0 },
-        { name: "Spreadsheets", size: 15.0 },
+        { name: "PDFs", size: usedStorage * 0.15 },
+        { name: "Word Docs", size: usedStorage * 0.07 },
+        { name: "Spreadsheets", size: usedStorage * 0.03 },
       ],
     },
     {
       name: "Photos & Videos",
-      size: 120.5,
+      size: usedStorage * 0.45,
       color: "bg-accent",
       icon: "🎬",
       files: [
-        { name: "4K Videos", size: 75.0 },
-        { name: "Photos", size: 35.5 },
-        { name: "Thumbnails", size: 10.0 },
+        { name: "Videos", size: usedStorage * 0.30 },
+        { name: "Photos", size: usedStorage * 0.15 },
       ],
     },
     {
       name: "Archives",
-      size: 25.1,
+      size: usedStorage * 0.20,
       color: "bg-black",
       icon: "📦",
       files: [
-        { name: "Backups", size: 15.0 },
-        { name: "ZIP Files", size: 10.1 },
+        { name: "Backups", size: usedStorage * 0.12 },
+        { name: "ZIP Files", size: usedStorage * 0.08 },
       ],
     },
     {
       name: "Other",
-      size: 15.0,
+      size: usedStorage * 0.10,
       color: "bg-gray-400",
       icon: "📁",
       files: [
-        { name: "Cache", size: 8.0 },
-        { name: "Temporary", size: 7.0 },
+        { name: "Cache", size: usedStorage * 0.06 },
+        { name: "Temporary", size: usedStorage * 0.04 },
       ],
     },
   ];
-
 
   return (
     <div className="bg-[#F7F5F2] rounded-2xl p-8 border border-border">
@@ -81,7 +79,9 @@ export function StorageUsage() {
           <p className="text-xs text-muted-foreground">Full</p>
         </div>
       </div>
-      <div className="grid grid-cols-3 gap-4 mb-8">
+
+      {/* Capacity Cards (Responsive Grid) */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
         <div className="bg-secondary rounded-lg p-4">
           <p className="text-xs text-muted-foreground mb-1">Used Storage</p>
           <p className="text-lg font-bold text-foreground">
@@ -120,30 +120,30 @@ export function StorageUsage() {
         <h3 className="text-lg font-semibold text-foreground mb-4">
           Storage by Category
         </h3>
-        <div className="space-y-3">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {storageBreakdown.map((category, index) => (
-            <div key={category.name}>
+            <div key={category.name} className="flex flex-col">
               <button
                 onClick={() =>
                   setExpandedCategory(expandedCategory === index ? null : index)
                 }
-                className="w-full flex items-center justify-between p-4 bg-secondary hover:bg-secondary/80 rounded-lg transition-colors"
+                className="w-full flex items-center justify-between p-4 bg-secondary hover:bg-secondary/80 rounded-lg transition-colors h-full"
               >
-                <div className="flex items-center gap-3 flex-1">
-                  <div className={`w-4 h-4 rounded-full ${category.color}`} />
-                  <div className="text-left">
-                    <p className="font-medium text-foreground">
+                <div className="flex items-center gap-3 flex-1 min-w-0">
+                  <div className={`w-4 h-4 rounded-full ${category.color} shrink-0`} />
+                  <div className="text-left min-w-0 flex-1">
+                    <p className="font-medium text-foreground truncate">
                       {category.icon} {category.name}
                     </p>
                     <p className="text-xs text-muted-foreground">
-                      {((category.size / usedStorage) * 100).toFixed(1)}% of
+                      {usedStorage > 0 ? ((category.size / usedStorage) * 100).toFixed(1) : "0.0"}% of
                       used storage
                     </p>
                   </div>
                 </div>
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-3 shrink-0 ml-2">
                   <span className="font-bold text-foreground">
-                    {category.size.toFixed(1)} 
+                    {formatSize(category.size)} 
                   </span>
                   <ChevronRight
                     className={`w-4 h-4 text-muted-foreground transition-transform ${
@@ -163,7 +163,7 @@ export function StorageUsage() {
                     >
                       <span>└ {file.name}</span>
                       <span className="font-medium">
-                        {file.size.toFixed(1)} 
+                        {formatSize(file.size)} 
                       </span>
                     </div>
                   ))}

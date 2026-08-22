@@ -4,7 +4,6 @@ export const shareWithPublicLinkApi = async (fileId, permission) => {
   try {
     const response = await axiosInstance.post(`/share/files/${fileId}/link`, {
       linkEnabled: false,
-      linkPermission: permission,
     });
     return response.data;
   } catch (error) {
@@ -26,12 +25,18 @@ export const shareFileToggleApi = async (fileId, linkEnabled) => {
 
 export const getShareWithLinkApi = async (fileId, token) => {
   try {
+    const tokenQuery = token ? `?token=${encodeURIComponent(token)}` : "";
     const response = await axiosInstance.get(
-      `/share/public/file/${fileId}?token=${token}`,
+      `/share/public/file/${fileId}${tokenQuery}`,
     );
     return response.data;
   } catch (error) {
-    return error.response.data;
+    return (
+      error?.response?.data || {
+        success: false,
+        message: "Unable to open this shared file.",
+      }
+    );
   }
 };
 
@@ -58,25 +63,27 @@ export const shareWithLinkPermissionsChangeApi = async (fileId, permission) => {
   }
 };
 
-export const shareFileWithEmailInviteApi = async (fileId, data) => {
+export const shareFileWithEmailInviteApi = async (fileId, emails, data) => {
   try {
     const response = await axiosInstance.post(
       `/share/file/${fileId}/email/invite`,
       {
-        email: data.email,
+        emails,
         permission: data.role,
+        message: data.message,
       },
     );
-    return response.data;
+    return response?.data;
   } catch (error) {
-    return error.response.data;
+    return error?.response?.data;
   }
 };
 
 export const getShareEmaileFileDataApi = async (fileId, token) => {
   try {
+    const tokenQuery = token ? `?token=${token}` : "";
     const response = await axiosInstance.get(
-      `/share/files/${fileId}/email-share?token=${token}`,
+      `/share/files/${fileId}/email-share${tokenQuery}`,
     );
     return response.data;
   } catch (error) {
@@ -84,4 +91,34 @@ export const getShareEmaileFileDataApi = async (fileId, token) => {
   }
 };
 
+export const getListPeopleAccessFileApi = async (fileId) => {
+  try {
+    const response = await axiosInstance.get(`/share/files/${fileId}/people`);
+    return response.data;
+  } catch (error) {
+    return error.response.data;
+  }
+};
 
+
+export const getSharedFileDashboardApi = async () => {
+  try {
+    const response = await axiosInstance.get("/share/files/dashboard")
+    return response.data
+  } catch (error) {
+    return error?.response?.data
+  }
+}
+
+export const getUsertoShareFileEmailApi = async (email , signal) => {
+  try {
+    const response = await axiosInstance.get(`/share/files/${email}/user`,  {
+    signal, 
+  })
+    return response?.data
+  } catch (error) {
+ if (err.name === "CanceledError") throw { name: "AbortError" }; // axios abort
+    if (err.response?.status === 404) return { data: [] }; // ✅ not found = empty
+    throw err;
+  }
+}

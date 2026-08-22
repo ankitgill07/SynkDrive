@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { cn } from '@/lib/utils'
 import {
   Dialog,
@@ -19,20 +19,35 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Spinner } from '@/components/ui/spinner'
+import { Checkbox } from '@/components/ui/checkbox'
 
 export default function EditUserModal({
   open = false,
   user = null,
+  currentRole = 'manager',
   onOpenChange = () => {},
   onSave = () => {},
 }) {
   const [isLoading, setIsLoading] = useState(false)
-  const [formData, setFormData] = useState(
-    user
-      ? { name: user.name, email: user.email, role: user.role }
-      : { name: '', email: '', role: 'viewer' }
-  )
+  const [formData, setFormData] = useState({ name: '', email: '', role: 'user', isDisable: false, storageGB: 1 })
   const [errors, setErrors] = useState({})
+
+  useEffect(() => {
+    if (user && open) {
+      setFormData({
+        name: user.name,
+        email: user.email,
+        role: (user.role || 'user').toLowerCase(),
+        isDisable: user.isDisable || false,
+        storageGB: user.maxStorageLimite ? user.maxStorageLimite / (1024 ** 3) : 1
+      });
+    } else {
+      setFormData({ name: '', email: '', role: 'user', isDisable: false, storageGB: 1 });
+    }
+    setErrors({});
+  }, [user, open]);
+
+  const isAdmin = ['admin'].includes(currentRole);
 
   const validateForm = () => {
     const newErrors = {}
@@ -40,6 +55,7 @@ export default function EditUserModal({
     if (!formData.email.match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/)) {
       newErrors.email = 'Invalid email address'
     }
+    if (formData.storageGB <= 0) newErrors.storageGB = 'Storage must be positive'
     return newErrors
   }
 
@@ -49,10 +65,15 @@ export default function EditUserModal({
 
     if (Object.keys(newErrors).length === 0) {
       setIsLoading(true)
-      setTimeout(() => {
-        onSave(formData)
-        setIsLoading(false)
-      }, 600)
+      const updates = {
+        name: formData.name,
+        email: formData.email,
+        role: formData.role,
+        isDisable: formData.isDisable,
+        maxStorageLimite: formData.storageGB * (1024 ** 3)
+      }
+      await onSave(updates)
+      setIsLoading(false)
     } else {
       setErrors(newErrors)
     }
@@ -62,7 +83,7 @@ export default function EditUserModal({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="rounded-xl border-0 shadow-lg sm:max-w-md sm:rounded-xl">
         <DialogHeader>
-          <DialogTitle>{user ? 'Edit User' : 'Add User'}</DialogTitle>
+          <DialogTitle>Edit User</DialogTitle>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -117,11 +138,43 @@ export default function EditUserModal({
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="viewer">Viewer</SelectItem>
-                <SelectItem value="admin">Admin</SelectItem>
-                <SelectItem value="super_admin">Super Admin</SelectItem>
+                <SelectItem value="user">User</SelectItem>
+                <SelectItem value="manager">Manager</SelectItem>
+                {isAdmin && <SelectItem value="admin">Admin</SelectItem>}
               </SelectContent>
             </Select>
+          </div>
+
+          <div className="space-y-2">
+            <label htmlFor="storageGB" className="text-sm font-medium">
+              Max Storage (GB)
+            </label>
+            <Input
+              id="storageGB"
+              type="number"
+              value={formData.storageGB}
+              onChange={(e) => setFormData((prev) => ({ ...prev, storageGB: parseFloat(e.target.value) || 0 }))}
+              className={`rounded-lg transition-all duration-200 focus-visible:ring-primary ${
+                errors.storageGB ? 'border-destructive' : ''
+              }`}
+            />
+            {errors.storageGB && (
+              <p className="text-xs text-destructive">{errors.storageGB}</p>
+            )}
+          </div>
+          
+          <div className="flex items-center space-x-2 pt-2">
+            <Checkbox 
+              id="isDisable" 
+              checked={formData.isDisable}
+              onCheckedChange={(checked) => setFormData((prev) => ({ ...prev, isDisable: checked }))}
+            />
+            <label
+              htmlFor="isDisable"
+              className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+            >
+              Disable Account
+            </label>
           </div>
 
           <DialogFooter className="gap-2 pt-4">

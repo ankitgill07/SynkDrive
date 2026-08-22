@@ -5,6 +5,7 @@ import RootLayout from "./layout/RootLayout";
 import React from "react";
 import { FileProgressProvider } from "./contextApi/FileProgress";
 import SnackbarProvider from "./contextApi/SnackbarContext";
+import { FilePreviewProvider } from "./contextApi/FilePreviewContext";
 
 function App() {
   return (
@@ -12,7 +13,9 @@ function App() {
       <RootLayout />
       <SnackbarProvider>
         <FileProgressProvider>
-          <RouterProvider router={router} />
+          <FilePreviewProvider>
+            <RouterProvider router={router} />
+          </FilePreviewProvider>
         </FileProgressProvider>
       </SnackbarProvider>
     </React.StrictMode>

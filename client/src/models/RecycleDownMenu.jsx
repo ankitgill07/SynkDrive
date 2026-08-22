@@ -14,11 +14,24 @@ import { restoreDataApi, restoreFoldersApi } from "@/api/RecycleBinApi";
 import DeleteAlrightModal from "./DeleteAlrightModal";
 import RecycleFolderTree from "./RecycleFolderTree";
 import { useSnackbar } from "@/contextApi/SnackbarContext";
+import { toast } from "sonner";
 
 function RecycleDownMenu({ items, allItems }) {
   const [openDelete, setOpenDelete] = useState(false);
+  const { showSnackbar } = useSnackbar();
 
-
+  const handleRestoreData = async (id) => {
+    const result =
+      items.type === "folder"
+        ? await restoreFoldersApi(id)
+        : await restoreDataApi(id);
+    if (result?.success) {
+      showSnackbar(`${items.type === "folder" ? "Folder" : "File"} restored successfully`);
+      allItems();
+    } else {
+      toast.error(result?.error || "Failed to restore");
+    }
+  };
 
   return (
     <>

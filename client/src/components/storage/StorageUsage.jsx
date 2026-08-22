@@ -1,7 +1,7 @@
 import { userAuth } from "@/contextApi/AuthContext";
 import React, { useEffect } from "react";
 import { formatSize } from "@/utils/Helpers";
-import { useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 
 function StorageUsage() {
   const { user, checkAuthorization } = userAuth();
@@ -10,7 +10,6 @@ function StorageUsage() {
   const max = user.maxStorageLimite;
 
   const percentage = Math.min((used / max) * 100, 100);
-  const navigate = useNavigate();
 
   const getBarColor = () => {
     if (percentage >= 90) return "bg-red-500";
@@ -24,7 +23,6 @@ function StorageUsage() {
 
   return (
     <div
-      onClick={() => navigate("/drive/subscription")}
       className="cursor-pointer hover:bg-gray-100 rounded-xl p-3 transition"
     >
       <div className="flex justify-between text-sm mb-1">
@@ -45,7 +43,15 @@ function StorageUsage() {
         <span>{formatSize(max - used)} free</span>
       </div>
       {/* ✅ subtle hint */}
-      <p className="text-xs text-blue-500 mt-2">Manage subscription →</p>
+      {user?.hasActiveSubscription || user?.subscriptionsId || (user?.subscriptionStatus && user?.subscriptionStatus !== "free" && user?.subscriptionStatus !== "cancelled") ? (
+        <Link to="/drive/subscription">
+          <button className=" text-[#155dfc]  flex items-center text-sm cursor-pointer font-medium font-inter duration-300">
+            <span>Manage Subscription</span>
+          </button>
+        </Link>
+      ) : (
+        ""
+      )}
     </div>
   );
 }

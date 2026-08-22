@@ -1,9 +1,6 @@
 import Users from "../models/userModel.js";
 import { getPlanById } from "./getPlanDetails.js";
 import redisClient from "../db/redisDB.js";
-import File from "../models/fileModel.js";
-import Subscription from "../models/subscriptionModal.js";
-import { filesDeletParmanetly } from "../services/recycleBin/index.js";
 
 export const disableUserService = async (
   userId,
@@ -28,25 +25,19 @@ export const disableUserService = async (
     await user.save();
 
     try {
+      // Invalidate excess active sessions if more than allowed by free plan
       const activeSessions = await redisClient.ft.search(
         "userIdx",
         `@userId:{${userId}}`,
       );
-      if (activeSessions.documents) {
-        for (const doc of activeSessions.documents) {
+      if (activeSessions.documents && activeSessions.documents.length > freePlan.maxDevices) {
+        const excessSessions = activeSessions.documents.slice(freePlan.maxDevices);
+        for (const doc of excessSessions) {
           await redisClient.del(doc.id);
         }
       }
-      const subscription = await Subscription.findOne({ userId: user._id });
-      const SubscriptionptimeUploadFile = await File.find({
-        userId,
-        createdAt: { $gte: new Date(subscription.startAt) },
-      });
-      for (const file of SubscriptionptimeUploadFile) {
-        await filesDeletParmanetly(file._id, userId);
-      }
     } catch (err) {
-      console.warn("Failed to invalidate sessions:", err.message);
+      console.warn("Failed to clean up excess sessions:", err.message);
     }
 
     console.log(
@@ -109,3 +100,4 @@ export const enableUserService = async (
     throw error;
   }
 };
+

@@ -39,7 +39,7 @@ router.delete(
   logoutForAllDevices,
 );
 
-router.delete("/session/{:sid}", Limiter.deleteSession(), logoutDevicesBySid);
+router.delete("/session/:sid", Limiter.deleteSession(), logoutDevicesBySid);
 
 router.delete(
   "/account-deleted",

@@ -1,16 +1,14 @@
 import { importFormGoogeDiveApi } from "@/api/fileApi";
 import { userAuth } from "@/contextApi/AuthContext";
-import useGlobalProgress from "@/hooks/useGlobalProgress";
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import { useFileProgress } from "@/contextApi/FileProgress";
+import { useCallback, useEffect, useRef } from "react";
 import useDrivePicker from "react-google-drive-picker";
 import { toast } from "sonner";
 
 function GoogleDriveImport({ Allfolder }) {
   const [openPicker, authResponse] = useDrivePicker();
-  const [progress, setProgress] = useState(0);
-  const [status, setStatus] = useState("");
-  const [loading, setLoading] = useState(false);
-
+  const { addProgressFiles, updateProgress } = useFileProgress();
+  const { user } = userAuth();
   const tokenRef = useRef(null);
 
   useEffect(() => {
@@ -22,40 +20,51 @@ function GoogleDriveImport({ Allfolder }) {
   const importFiles = useCallback(
     async (docs, token) => {
       if (!token) {
-        toast.error("❌ No access token found. Please try again.");
+        toast.error("No access token found. Please try again.");
         return;
       }
+
       try {
-        setLoading(true);
-        setProgress(0);
         const payload = docs.map((file) => ({
           id: file.id,
+          importId: `drive-${file.id}`,
           name: file.name,
           mimeType: file.mimeType,
           size: file.sizeBytes,
           accessToken: token,
         }));
-        const result = await importFormGoogeDiveApi(payload, setProgress);
-        if (result.success) {
+
+        addProgressFiles(
+          payload.map((file) => ({
+            id: file.importId,
+            name: file.name,
+            size: Number(file.size) || 0,
+            progress: 0,
+            type: file.mimeType,
+          })),
+        );
+
+        const result = await importFormGoogeDiveApi(payload);
+        if (result?.success) {
+          payload.forEach((file) => updateProgress(file.importId, 100));
           Allfolder();
           toast.success(result?.data);
-          setStatus(`✅ Imported ${docs?.length} file(s) successfully.`);
         } else {
-          toast.error(result?.message);
-          setStatus("❌ Import failed: " + result?.message);
+          toast.error(result?.message || "Import failed");
         }
       } catch (err) {
-        setStatus("❌ Import failed: " + err.message);
-        toast.error("❌ Import failed: " + err.message);
-      } finally {
-        setLoading(false);
+        toast.error(`Import failed: ${err.message}`);
       }
     },
-    [Allfolder, progress],
+    [Allfolder, addProgressFiles, updateProgress],
   );
-  console.log(progress);
 
   const handleOpenPicker = () => {
+    if (!user?.id && !user?._id) {
+      toast.error("Please log in again before importing files.");
+      return;
+    }
+
     openPicker({
       clientId: import.meta.env.VITE_GOOGLE_CLIENT_ID,
       developerKey: import.meta.env.VITE_APP_GOOGLE_API_KEY,
@@ -84,7 +93,7 @@ function GoogleDriveImport({ Allfolder }) {
           src="https://png.pngtree.com/png-vector/20230817/ourmid/pngtree-google-internet-icon-vector-png-image_9183287.png"
           alt=""
         />
-        <span className="font-plusjakartaSans ml-1.5 font-bold text-sm">
+        <span className="hidden md:inline font-plusjakartaSans ml-1.5 font-bold text-sm">
           Import from Google Drive
         </span>
       </button>

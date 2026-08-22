@@ -5,15 +5,19 @@ import { Smartphone, LogOut } from "lucide-react";
 import { useEffect, useState } from "react";
 import { logoutDevicesBySidApi, logoutForAllDeviceApi } from "@/api/UserApi";
 import { toast } from "sonner";
+import { userAuth } from "@/contextApi/AuthContext";
 
 export function LogoutSection({ profile, handleProfile }) {
+  const { checkAuthorization } = userAuth();
+
   const handelSelectedDevice = async (sid) => {
     const result = await logoutDevicesBySidApi(sid);
     if (result.success) {
       handleProfile();
       toast.success(result.data);
+      await checkAuthorization();
     } else {
-      toast.error(result.date);
+      toast.error(result.error || result.message || "Failed to logout");
     }
   };
 
@@ -21,8 +25,9 @@ export function LogoutSection({ profile, handleProfile }) {
     const result = await logoutForAllDeviceApi();
     if (result.success) {
       toast.success(result.data);
+      await checkAuthorization();
     } else {
-      toast.error(result.date);
+      toast.error(result.error || result.message || "Failed to logout");
     }
   };
 
@@ -39,7 +44,7 @@ export function LogoutSection({ profile, handleProfile }) {
           ({ sessionId, deviceName, os, isCurrent, lastActive }) => (
             <div
               key={sessionId}
-              className="flex items-center justify-between p-4 bg-secondary rounded-lg border border-border hover:border-accent/50 transition-colors"
+              className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between p-4 bg-secondary rounded-lg border border-border hover:border-accent/50 transition-colors"
             >
               <div className="flex items-center gap-4">
                 <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center">

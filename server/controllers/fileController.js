@@ -1,8 +1,8 @@
 import path from "path";
 import File from "../models/fileModel.js";
 import Folder from "../models/folderModel.js ";
-import { ObjectId } from "mongodb";
-import { getFolderSize } from "../utils/helperUtil.js";
+import mongoose from "mongoose";
+import { getFolderSize, getMimeType } from "../utils/helperUtil.js";
 import { softDeleteFile } from "../services/recycleBin/index.js";
 import {
   s3DeletePreSingedUrl,
@@ -14,11 +14,12 @@ import { errorResponse, successResponse } from "../utils/apiResponse.js";
 import { StatusCodes } from "http-status-codes";
 import { cloudfrontSignedUrl } from "../services/file/cloudFront.js";
 import { importGoogleDrive } from "../services/file/index.js";
+import { sendEventToUser } from "./eventController.js";
 
 export const uploadInitiate = async (req, res, next) => {
   const user = req.user;
   const parentFolderId = req.params.id
-    ? new ObjectId(req.params.id)
+    ? new mongoose.Types.ObjectId(req.params.id)
     : user.rootFolderId;
   const { contentType, fileName, size } = req.body;
   try {
@@ -39,6 +40,7 @@ export const uploadInitiate = async (req, res, next) => {
       );
     }
     const extension = path.extname(fileName);
+    const detectedType = contentType || getMimeType(fileName);
 
     const insertedFile = await File.insertOne({
       name: fileName,
@@ -52,11 +54,12 @@ export const uploadInitiate = async (req, res, next) => {
     const fileId = insertedFile.id;
 
     const fullFileName = `${fileId}${extension}`;
-    const url = await s3UploadPresignedUrl(fullFileName, contentType);
+    const url = await s3UploadPresignedUrl(fullFileName, detectedType);
 
     return successResponse(res, StatusCodes.OK, {
       fileId: fileId,
       uploadUrl: url,
+      contentType: detectedType,
     });
   } catch (error) {
     next(error);
@@ -64,7 +67,7 @@ export const uploadInitiate = async (req, res, next) => {
 };
 
 export const uploadCompleted = async (req, res, next) => {
-  const fileId = new ObjectId(req.params.fileId);
+  const fileId = new mongoose.Types.ObjectId(req.params.fileId);
   const fileData = await File.findById(fileId);
   if (!fileData) {
     return errorResponse(res, StatusCodes.NOT_FOUND, "This file is  not found");
@@ -136,25 +139,27 @@ export const getFileById = async (req, res) => {
   const id = req.params.id;
   try {
     const fileMetaData = await File.findById(id);
+    if (!fileMetaData) {
+      return res.status(404).json({ error: "not found this file" });
+    }
 
     const parentFolder = await Folder.findOne({
       _id: fileMetaData.parentFolderId,
       userId: req.user._id,
     }).lean();
     if (!parentFolder) {
-      return res.status.json({ error: "You don't have access to this file." });
-    }
-    if (!fileMetaData) {
-      return res.status(404).json({ error: "not found this file" });
+      return res.status(403).json({ error: "You don't have access to this file." });
     }
     const filePath = `${id}${fileMetaData.extension}`;
 
     if (req.query.action === "download") {
       const downloadFileUrl = await s3GetPreSignedUrl({
         key: filePath,
-        download: true,
         fileName: fileMetaData.name,
       });
+      if (req.query.json === "true") {
+        return res.json({ downloadUrl: downloadFileUrl });
+      }
       return res.redirect(downloadFileUrl);
     }
 
@@ -162,9 +167,12 @@ export const getFileById = async (req, res) => {
       key: filePath,
       fileName: fileMetaData.name,
     });
+    if (req.query.json === "true") {
+      return res.json({ previewUrl: getUrl });
+    }
     return res.redirect(getUrl);
   } catch (error) {
-    res.status(501).json(error);
+    res.status(501).json({ error: error.message || error });
   }
 };
 
@@ -176,7 +184,7 @@ export const renameFileName = async (req, res, next) => {
   }
   try {
     await File.findOneAndUpdate(
-      { _id: new ObjectId(id), userId: req.user._id },
+      { _id: new mongoose.Types.ObjectId(id), userId: req.user._id },
       { $set: { name: fileName } },
     );
     res.status(201).json({ success: "file renamed" });
@@ -186,7 +194,7 @@ export const renameFileName = async (req, res, next) => {
 };
 
 export const recycledFilebyId = async (req, res, next) => {
-  const fileId = new ObjectId(req.params.id);
+  const fileId = new mongoose.Types.ObjectId(req.params.id);
   const userId = req.user._id;
   try {
     await softDeleteFile(fileId, userId);
@@ -207,7 +215,7 @@ export const importFormGoogleDive = async (req, res, next) => {
   }
   try {
     for (const file of files) {
-      const { id: fileId, name, mimeType, size, accessToken } = file;
+      const { id: fileId, importId, name, mimeType, size, accessToken } = file;
       if (!fileId || !accessToken) {
         return errorResponse(
           res,
@@ -224,6 +232,16 @@ export const importFormGoogleDive = async (req, res, next) => {
           "NOT MORE SAPCE TO STORE",
         );
       }
+      const progressImportId = importId || `drive-${fileId}`;
+      const sendDriveProgress = (progress) => {
+        sendEventToUser(userId.toString(), {
+          type: "driveImportProgress",
+          importId: progressImportId,
+          progress,
+        });
+      };
+
+      sendDriveProgress(5);
       await importGoogleDrive(
         fileId,
         name,
@@ -232,7 +250,9 @@ export const importFormGoogleDive = async (req, res, next) => {
         accessToken,
         rootFolderId,
         userId,
+        sendDriveProgress,
       );
+      sendDriveProgress(100);
     }
     successResponse(res, StatusCodes.CREATED, "File upload completed");
   } catch (error) {

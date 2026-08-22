@@ -14,7 +14,7 @@ import useAction from "@/hooks/useAction";
 import { useDispatch } from "react-redux";
 import { toggleItems } from "@/lib/FolderSlice";
 
-function RowLayout({ folder, allItems, handleOpen}) {
+function RowLayout({ folder, allItems, handleOpen }) {
   const { user } = userAuth();
   const dispatch = useDispatch();
   const { handleAddStarred } = useAction({
@@ -31,13 +31,12 @@ function RowLayout({ folder, allItems, handleOpen}) {
         <div
           onClick={() => handleOpen(folder)}
           className={`
-        group grid grid-cols-[40px_1fr_1fr_1fr_40px_100px_50px] gap-2 items-center  py-3.5 
+        group grid grid-cols-[40px_1fr_40px] sm:grid-cols-[40px_1fr_120px_40px_80px_40px] md:grid-cols-[40px_1fr_120px_150px_40px_80px_40px] gap-2 sm:gap-3 md:gap-4 items-center py-3.5 
         cursor-pointer transition-colors duration-150 border-b
-        ${
-          folder.selected
-            ? "bg-blue-50 hover:bg-blue-50 border-blue-100"
-            : "hover:bg-gray-50 border-gray-200"
-        } 
+        ${folder.selected
+              ? "bg-blue-50 hover:bg-blue-50 border-blue-100"
+              : "hover:bg-gray-50 border-gray-200"
+            } 
       `}
         >
           <div
@@ -65,7 +64,7 @@ function RowLayout({ folder, allItems, handleOpen}) {
           </div>
 
           {/* Column 3: Owner */}
-          <div className="flex items-center text-sm text-gray-500">
+          <div className="hidden sm:flex items-center text-sm text-gray-500">
             <div className="w-7 h-7 rounded-full bg-gray-100 flex items-center justify-center mr-2 text-xs font-bold text-gray-600 border border-gray-200">
               {folder.userId === user.id && (
                 <img
@@ -79,7 +78,7 @@ function RowLayout({ folder, allItems, handleOpen}) {
           </div>
 
           {/* Column 4: Date */}
-          <div className="text-sm font-inter text-gray-500 truncate font-medium">
+          <div className="hidden md:block text-sm font-inter text-gray-500 truncate font-medium">
             {formatTimestamp(folder?.updatedAt)}
           </div>
 
@@ -88,7 +87,7 @@ function RowLayout({ folder, allItems, handleOpen}) {
               e.stopPropagation();
               handleAddStarred(folder._id);
             }}
-            className="flex justify-center items-center cursor-pointer"
+            className="hidden sm:flex justify-center items-center cursor-pointer"
           >
             {folder.isStarred ? (
               <FaStar className="text-yellow-400 text-sm" />
@@ -98,7 +97,7 @@ function RowLayout({ folder, allItems, handleOpen}) {
           </div>
 
           {/* Column 6: Size */}
-          <div className="text-sm text-gray-500 text-right font-medium">
+          <div className="hidden sm:block text-sm text-gray-500 text-right font-medium">
             {formatSize(folder.size)}
           </div>
 

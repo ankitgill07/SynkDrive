@@ -6,48 +6,13 @@ import { Button } from '@/components/ui/button'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
 import { File, MoreVertical, Globe, Lock, Users } from 'lucide-react'
 import { useState } from 'react'
+import { formatTimestamp } from '@/utils/Helpers'
 
-const SHARED_FILES = [
-  {
-    id: '1',
-    name: 'Q1 Revenue Report.pdf',
-    type: 'document',
-    sharedWith: ['john@company.com', 'sarah@company.com', 'mike@company.com'],
-    permission: 'edit',
-    sharedDate: '2 days ago',
-    visibility: 'team',
-  },
-  {
-    id: '2',
-    name: 'Marketing Strategy 2024.docx',
-    type: 'document',
-    sharedWith: ['team@company.com'],
-    permission: 'edit',
-    sharedDate: '1 week ago',
-    visibility: 'team',
-  },
-  {
-    id: '3',
-    name: 'Budget Allocation.xlsx',
-    type: 'spreadsheet',
-    sharedWith: ['finance@company.com', 'alex@company.com'],
-    permission: 'view',
-    sharedDate: '3 days ago',
-    visibility: 'team',
-  },
-  {
-    id: '4',
-    name: 'Product Roadmap Q2.pptx',
-    type: 'presentation',
-    sharedWith: ['product@company.com', 'design@company.com'],
-    permission: 'edit',
-    sharedDate: '5 days ago',
-    visibility: 'public',
-  },
-]
 
-export function SharedByMe() {
-  const [files, setFiles] = useState(SHARED_FILES)
+
+export function SharedByMe({ shareByMe }) {
+  const [files, setFiles] = useState()
+  console.log(shareByMe);
 
   const getVisibilityIcon = (visibility) => {
     if (visibility === 'public') return <Globe className="w-4 h-4" />
@@ -80,17 +45,17 @@ export function SharedByMe() {
             </tr>
           </thead>
           <tbody>
-            {files.map((file) => (
-              <tr key={file.id} className="border-b border-border hover:bg-muted/20 transition-colors">
+            {shareByMe.map((file) => (
+              <tr key={file?.id} className="border-b border-border hover:bg-muted/20 transition-colors">
                 <td className="px-6 py-4">
                   <div className="flex items-center gap-3">
                     <File className="w-4 h-4 text-muted-foreground" />
-                    <span className="font-medium text-foreground text-sm">{file.name}</span>
+                    <span className="font-medium text-foreground text-sm">{file.fileName}</span>
                   </div>
                 </td>
                 <td className="px-6 py-4">
                   <div className="flex items-center gap-1">
-                    {file.sharedWith.length > 0 && (
+                    {file?.sharedWith?.length > 0 && (
                       <>
                         <span className="text-sm text-muted-foreground">{file.sharedWith.length} people</span>
                       </>
@@ -104,11 +69,11 @@ export function SharedByMe() {
                 </td>
                 <td className="px-6 py-4">
                   <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                    {getVisibilityIcon(file.visibility)}
-                    <span className="capitalize">{file.visibility}</span>
+                    {getVisibilityIcon(file.type)}
+                    <span className="capitalize">{file.type}</span>
                   </div>
                 </td>
-                <td className="px-6 py-4 text-sm text-muted-foreground">{file.sharedDate}</td>
+                <td className="px-6 py-4 text-sm text-muted-foreground">{formatTimestamp(file.createdAt)}</td>
                 <td className="px-6 py-4 text-right">
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>

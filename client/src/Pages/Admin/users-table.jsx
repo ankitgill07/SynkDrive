@@ -1,9 +1,7 @@
 'use client'
 
-import { useState, useMemo, useCallback } from 'react'
-import { useDispatch, useSelector } from 'react-redux'
+import { useState, useMemo, useEffect } from 'react'
 import { cn } from '@/lib/utils'
-import { updateUser, deleteUser, forceLogoutUser } from '@/lib/dashboardSlice'
 import { formatDistanceToNow, format } from 'date-fns'
 import {
   Search,
@@ -49,30 +47,30 @@ import {
 import ConfirmModal from './confirm-modal'
 import EditUserModal from './edit-user-modal'
 import { toast } from 'sonner'
+import { getAdminUsers, updateAdminUser, deleteAdminUser, bulkDeleteUsers, logoutAdminUser, bulkLogoutUsers } from '@/api/AdminApi'
 
 const statusColors = {
   active: 'bg-emerald-50 text-emerald-700 border-emerald-200',
-  offline: 'bg-gray-100 text-gray-600 border-gray-200',
-  deleted: 'bg-red-50 text-red-700 border-red-200',
+  disabled: 'bg-red-50 text-red-700 border-red-200',
 }
 
 const roleColors = {
-  super_admin: 'bg-blue-50 text-blue-700 border-blue-200',
   admin: 'bg-amber-50 text-amber-700 border-amber-200',
-  viewer: 'bg-gray-100 text-gray-600 border-gray-200',
+  manager: 'bg-blue-50 text-blue-700 border-blue-200',
+  user: 'bg-gray-100 text-gray-600 border-gray-200',
 }
 
 const roleLabels = {
-  super_admin: 'Super Admin',
   admin: 'Admin',
-  viewer: 'Viewer',
+  manager: 'Manager',
+  user: 'User',
 }
 
-export default function UsersTable() {
-  const dispatch = useDispatch()
-  const { users } = useSelector((state) => state.dashboard)
+export default function UsersTable({ currentRole, isAdmin }) {
+  const [users, setUsers] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [totalCount, setTotalCount] = useState(0)
 
-  
   const [searchQuery, setSearchQuery] = useState('')
   const [statusFilter, setStatusFilter] = useState('all')
   const [roleFilter, setRoleFilter] = useState('all')
@@ -95,46 +93,36 @@ export default function UsersTable() {
   const [deleteConfirm, setDeleteConfirm] = useState(null)
   const [logoutConfirm, setLogoutConfirm] = useState(null)
 
-  const filteredUsers = useMemo(() => {
-    let result = [...users]
-
-    if (searchQuery) {
-      result = result.filter(
-        (user) =>
-          user.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          user.email.toLowerCase().includes(searchQuery.toLowerCase())
-      )
+  const fetchUsers = async () => {
+    setLoading(true)
+    const params = {
+      page: currentPage,
+      limit: pageSize,
+      search: searchQuery,
+      status: statusFilter !== 'all' ? statusFilter : undefined,
+      role: roleFilter !== 'all' ? roleFilter : undefined,
+      sortField: sortField,
+      sortDirection: sortDirection,
     }
-
-    if (statusFilter !== 'all') {
-      result = result.filter((user) => user.status === statusFilter)
+    const data = await getAdminUsers(params)
+    if (data && !data.error) {
+      setUsers(data.users || [])
+      setTotalCount(data.totalCount || data.total || 0)
+    } else {
+      toast.error('Failed to fetch users')
     }
+    setLoading(false)
+  }
 
-    if (roleFilter !== 'all') {
-      result = result.filter((user) => user.role === roleFilter)
-    }
+  useEffect(() => {
+    fetchUsers()
+  }, [currentPage, pageSize, searchQuery, statusFilter, roleFilter, sortField, sortDirection])
 
-    result.sort((a, b) => {
-      let aVal = a[sortField]
-      let bVal = b[sortField]
-
-      if (aVal < bVal) return sortDirection === 'asc' ? -1 : 1
-      if (aVal > bVal) return sortDirection === 'asc' ? 1 : -1
-      return 0
-    })
-
-    return result
-  }, [users, searchQuery, statusFilter, roleFilter, sortField, sortDirection])
-
-  const totalPages = Math.ceil(filteredUsers.length / pageSize)
-  const paginatedUsers = filteredUsers.slice(
-    (currentPage - 1) * pageSize,
-    currentPage * pageSize
-  )
+  const totalPages = Math.ceil(totalCount / pageSize) || 1
 
   const handleSelectAll = (checked) => {
     if (checked) {
-      setSelectedUsers(new Set(paginatedUsers.map((u) => u.id)))
+      setSelectedUsers(new Set(users.map((u) => u._id || u.id)))
     } else {
       setSelectedUsers(new Set())
     }
@@ -163,74 +151,83 @@ export default function UsersTable() {
     setEditingUser(user)
   }
 
-  const handleSaveUser = (updates) => {
-    dispatch(updateUser({ userId: editingUser.id, updates }))
-    setEditingUser(null)
-    toast.success({
-      title: 'Success',
-      description: 'User updated successfully',
-    })
+  const handleSaveUser = async (updates) => {
+    const userId = editingUser._id || editingUser.id
+    const data = await updateAdminUser(userId, updates)
+    if (data && !data.error) {
+      toast.success('User updated successfully')
+      setEditingUser(null)
+      fetchUsers()
+    } else {
+      toast.error(data?.message || data?.error || 'Failed to update user')
+    }
   }
 
   const handleDeleteUser = (user) => {
     setDeleteConfirm(user)
   }
 
-  const handleConfirmDelete = () => {
-    dispatch(deleteUser(deleteConfirm.id))
-    setDeleteConfirm(null)
-    toast.success({
-      title: 'User Deleted',
-      description: `${deleteConfirm.name} has been deleted`,
-    })
+  const handleConfirmDelete = async () => {
+    const userId = deleteConfirm._id || deleteConfirm.id
+    const data = await deleteAdminUser(userId)
+    if (data && !data.error) {
+      toast.success(`${deleteConfirm.name} has been deleted`)
+      setDeleteConfirm(null)
+      fetchUsers()
+    } else {
+      toast.error(data?.message || data?.error || 'Failed to delete user')
+    }
   }
 
   const handleForceLogout = (user) => {
     setLogoutConfirm(user)
   }
 
-  const handleConfirmLogout = () => {
-    dispatch(forceLogoutUser(logoutConfirm.id))
-    setLogoutConfirm(null)
-    toast.success({
-      title: 'User Logged Out',
-      description: `${logoutConfirm.name} has been logged out`,
-    })
+  const handleConfirmLogout = async () => {
+    const userId = logoutConfirm._id || logoutConfirm.id
+    const data = await logoutAdminUser(userId)
+    if (data && !data.error) {
+      toast.success(`${logoutConfirm.name} has been logged out`)
+      setLogoutConfirm(null)
+      fetchUsers()
+    } else {
+      toast.error(data?.message || data?.error || 'Failed to logout user')
+    }
   }
 
-  const handleBulkDelete = () => {
-    selectedUsers.forEach((userId) => {
-      dispatch(deleteUser(userId))
-    })
-    setSelectedUsers(new Set())
-    toast.success({
-      title: 'Users Deleted',
-      description: `${selectedUsers.size} users have been deleted`,
-    })
+  const handleBulkDelete = async () => {
+    const data = await bulkDeleteUsers(Array.from(selectedUsers))
+    if (!data.error) {
+      toast.success(`${selectedUsers.size} users have been deleted`)
+      setSelectedUsers(new Set())
+      fetchUsers()
+    } else {
+      toast.error('Failed to bulk delete users')
+    }
   }
 
-  const handleBulkLogout = () => {
-    selectedUsers.forEach((userId) => {
-      dispatch(forceLogoutUser(userId))
-    })
-    setSelectedUsers(new Set())
-    toast.success({
-      title: 'Users Logged Out',
-      description: `${selectedUsers.size} users have been logged out`,
-    })
+  const handleBulkLogout = async () => {
+    const data = await bulkLogoutUsers(Array.from(selectedUsers))
+    if (!data.error) {
+      toast.success(`${selectedUsers.size} users have been logged out`)
+      setSelectedUsers(new Set())
+      fetchUsers()
+    } else {
+      toast.error('Failed to bulk logout users')
+    }
   }
 
   const handleExport = () => {
     const csv = [
-      ['Name', 'Email', 'Role', 'Status', 'Storage (GB)', 'Created At', 'Last Active'],
-      ...filteredUsers.map((user) => [
+      ['Name', 'Email', 'Role', 'Status', 'Storage Used (GB)', 'Allocated (GB)', 'Created At'],
+      ...users.map((user) => [
         user.name,
         user.email,
-        roleLabels[user.role],
-        user.status,
-        user.storageUsed,
-        format(user.createdAt, 'yyyy-MM-dd HH:mm'),
-        formatDistanceToNow(user.lastActive, { addSuffix: true }),
+        roleLabels[(user.role || '').toLowerCase()] || user.role,
+        user.isDisable ? 'disabled' : 'active',
+        (user.usedStorage / (1024 ** 3)).toFixed(2),
+        (user.maxStorageLimite / (1024 ** 3)).toFixed(2),
+        format(new Date(user.createdAt), 'yyyy-MM-dd HH:mm'),
       ]),
     ]
       .map((row) => row.map((cell) => `"${cell}"`).join(','))
@@ -244,10 +241,7 @@ export default function UsersTable() {
     a.click()
     window.URL.revokeObjectURL(url)
 
-    toast.success({
-      title: 'Export Complete',
-      description: `${filteredUsers.length} users exported to CSV`,
-    })
+    toast.success(`${users.length} users exported to CSV`)
   }
 
   return (
@@ -281,8 +275,7 @@ export default function UsersTable() {
             <SelectContent>
               <SelectItem value="all">All Status</SelectItem>
               <SelectItem value="active">Active</SelectItem>
-              <SelectItem value="offline">Offline</SelectItem>
-              <SelectItem value="deleted">Deleted</SelectItem>
+              <SelectItem value="disabled">Disabled</SelectItem>
             </SelectContent>
           </Select>
 
@@ -295,9 +288,9 @@ export default function UsersTable() {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All Roles</SelectItem>
-              <SelectItem value="super_admin">Super Admin</SelectItem>
               <SelectItem value="admin">Admin</SelectItem>
-              <SelectItem value="viewer">Viewer</SelectItem>
+              <SelectItem value="manager">Manager</SelectItem>
+              <SelectItem value="user">User</SelectItem>
             </SelectContent>
           </Select>
 
@@ -358,15 +351,17 @@ export default function UsersTable() {
                 <LogOut className="mr-1.5 h-3.5 w-3.5" />
                 Logout
               </Button>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={handleBulkDelete}
-                className="h-8 hover:bg-red-100 hover:text-red-700"
-              >
-                <Trash2 className="mr-1.5 h-3.5 w-3.5" />
-                Delete
-              </Button>
+              {isAdmin && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={handleBulkDelete}
+                  className="h-8 hover:bg-red-100 hover:text-red-700"
+                >
+                  <Trash2 className="mr-1.5 h-3.5 w-3.5" />
+                  Delete
+                </Button>
+              )}
               <Button
                 variant="ghost"
                 size="sm"
@@ -387,7 +382,7 @@ export default function UsersTable() {
                 <tr className="border-b border-border/50 bg-muted/30">
                   <th className="px-4 py-3 text-left font-semibold">
                     <Checkbox
-                      checked={selectedUsers.size === paginatedUsers.length && paginatedUsers.length > 0}
+                      checked={selectedUsers.size === users.length && users.length > 0}
                       onCheckedChange={handleSelectAll}
                     />
                   </th>
@@ -414,11 +409,11 @@ export default function UsersTable() {
                   {visibleColumns.storage && (
                     <th
                       className="cursor-pointer px-4 py-3 text-left font-semibold hover:bg-muted/50"
-                      onClick={() => handleSort('storageUsed')}
+                      onClick={() => handleSort('usedStorage')}
                     >
                       <div className="flex items-center gap-2">
                         Storage
-                        {sortField === 'storageUsed' && (
+                        {sortField === 'usedStorage' && (
                           sortDirection === 'asc' ? (
                             <ChevronUp className="h-3 w-3" />
                           ) : (
@@ -433,23 +428,6 @@ export default function UsersTable() {
                   )}
                   {visibleColumns.role && (
                     <th className="px-4 py-3 text-left font-semibold">Role</th>
-                  )}
-                  {visibleColumns.lastActive && (
-                    <th
-                      className="cursor-pointer px-4 py-3 text-left font-semibold hover:bg-muted/50"
-                      onClick={() => handleSort('lastActive')}
-                    >
-                      <div className="flex items-center gap-2">
-                        Last Active
-                        {sortField === 'lastActive' && (
-                          sortDirection === 'asc' ? (
-                            <ChevronUp className="h-3 w-3" />
-                          ) : (
-                            <ChevronDown className="h-3 w-3" />
-                          )
-                        )}
-                      </div>
-                    </th>
                   )}
                   {visibleColumns.createdAt && (
                     <th
@@ -474,146 +452,173 @@ export default function UsersTable() {
                 </tr>
               </thead>
               <tbody>
-                {paginatedUsers.map((user, index) => (
-                  <tr
-                    key={user.id}
-                    className={cn(
-                      'transition-colors duration-150 hover:bg-[#F8F9FA]',
-                      index % 2 === 1 && 'bg-muted/30',
-                      selectedUsers.has(user.id) && 'bg-primary/5'
-                    )}
-                  >
-                    <td className="px-4 py-3">
-                      <Checkbox
-                        checked={selectedUsers.has(user.id)}
-                        onCheckedChange={(checked) =>
-                          handleSelectUser(user.id, checked)
-                        }
-                      />
+                {loading ? (
+                  <tr>
+                    <td colSpan="10" className="py-12 text-center text-muted-foreground">
+                      Loading users...
                     </td>
-                    {visibleColumns.user && (
-                      <td className="px-4 py-3">
-                        <div className="flex items-center gap-3">
-                          <Avatar className="h-8 w-8">
-                            <AvatarImage src={`https://avatar.vercel.sh/${user.email}`} />
-                            <AvatarFallback>
-                              {user.name
-                                .split(' ')
-                                .map((n) => n[0])
-                                .join('')}
-                            </AvatarFallback>
-                          </Avatar>
-                          <div className="min-w-0">
-                            <p className="truncate font-medium text-foreground">
-                              {user.name}
-                            </p>
-                            <p className="truncate text-xs text-muted-foreground">
-                              {user.email}
-                            </p>
-                          </div>
-                        </div>
-                      </td>
-                    )}
-                    {visibleColumns.userId && (
-                      <td className="px-4 py-3 text-xs text-muted-foreground">
-                        {user.id}
-                      </td>
-                    )}
-                    {visibleColumns.storage && (
-                      <td className="px-4 py-3">
-                        <div className="space-y-1">
-                          <div className="text-sm font-medium text-foreground">
-                            {user.storageUsed} GB
-                          </div>
-                          <Progress
-                            value={(user.storageUsed / 1024) * 100}
-                            className="h-1.5 w-20"
-                          />
-                        </div>
-                      </td>
-                    )}
-                    {visibleColumns.status && (
-                      <td className="px-4 py-3">
-                        <Badge
-                          variant="outline"
-                          className={cn('font-medium capitalize', statusColors[user.status])}
-                        >
-                          {user.status === 'active' && (
-                            <span className="mr-1.5 h-1.5 w-1.5 rounded-full bg-emerald-500" />
-                          )}
-                          {user.status}
-                        </Badge>
-                      </td>
-                    )}
-                    {visibleColumns.role && (
-                      <td className="px-4 py-3">
-                        <Badge
-                          variant="outline"
-                          className={cn('font-medium', roleColors[user.role])}
-                        >
-                          {roleLabels[user.role]}
-                        </Badge>
-                      </td>
-                    )}
-                    {visibleColumns.lastActive && (
-                      <td className="px-4 py-3 text-sm text-muted-foreground">
-                        {formatDistanceToNow(user.lastActive, { addSuffix: true })}
-                      </td>
-                    )}
-                    {visibleColumns.createdAt && (
-                      <td className="px-4 py-3 text-sm text-muted-foreground">
-                        {format(user.createdAt, 'MMM dd, yyyy')}
-                      </td>
-                    )}
-                    {visibleColumns.actions && (
-                      <td className="px-4 py-3 text-right">
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="h-8 w-8"
-                            >
-                              <MoreHorizontal className="h-4 w-4" />
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
-                            <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                            <DropdownMenuSeparator />
-                            <DropdownMenuItem onClick={() => handleEditUser(user)}>
-                              <Pencil className="mr-2 h-3.5 w-3.5" />
-                              Edit
-                            </DropdownMenuItem>
-                            <DropdownMenuItem
-                              onClick={() => handleForceLogout(user)}
-                              className="text-amber-600"
-                            >
-                              <LogOut className="mr-2 h-3.5 w-3.5" />
-                              Force Logout
-                            </DropdownMenuItem>
-                            <DropdownMenuSeparator />
-                            <DropdownMenuItem
-                              onClick={() => handleDeleteUser(user)}
-                              className="text-red-600"
-                            >
-                              <Trash2 className="mr-2 h-3.5 w-3.5" />
-                              Delete
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      </td>
-                    )}
                   </tr>
-                ))}
+                ) : users.length === 0 ? (
+                  <tr>
+                    <td colSpan="10" className="py-12 text-center text-muted-foreground">
+                      No users found
+                    </td>
+                  </tr>
+                ) : (
+                  users.map((user, index) => {
+                    const userId = user._id || user.id
+                    const status = user.isDisable ? 'disabled' : 'active'
+                    const role = (user.role || '').toLowerCase()
+                    const isTargetAdmin = ['admin'].includes(role)
+                    const canEdit = isAdmin || !isTargetAdmin
+
+                    const formatStorageSize = (bytes) => {
+                      if (!bytes || bytes === 0) return '0 B'
+                      const k = 1024
+                      const sizes = ['B', 'KB', 'MB', 'GB', 'TB']
+                      const i = Math.floor(Math.log(bytes) / Math.log(k))
+                      return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i]
+                    }
+
+                    const usedFormatted = formatStorageSize(user.storageUsed || 0)
+                    const limitGB = (user.maxStorageLimite / (1024 ** 3)).toFixed(2) + ' GB'
+                    const pct = user.maxStorageLimite ? Math.min(((user.storageUsed || 0) / user.maxStorageLimite) * 100, 100) : 0
+
+                    return (
+                      <tr
+                        key={userId}
+                        className={cn(
+                          'transition-colors duration-150 hover:bg-[#F8F9FA]',
+                          index % 2 === 1 && 'bg-muted/30',
+                          selectedUsers.has(userId) && 'bg-primary/5'
+                        )}
+                      >
+                        <td className="px-4 py-3">
+                          <Checkbox
+                            checked={selectedUsers.has(userId)}
+                            onCheckedChange={(checked) =>
+                              handleSelectUser(userId, checked)
+                            }
+                          />
+                        </td>
+                        {visibleColumns.user && (
+                          <td className="px-4 py-3">
+                            <div className="flex items-center gap-3">
+                              <Avatar className="h-8 w-8">
+                                <AvatarImage src={user.picture} />
+                                <AvatarFallback>
+                                  {user.name?.split(' ').map((n) => n[0]).join('') || 'U'}
+                                </AvatarFallback>
+                              </Avatar>
+                              <div className="min-w-0">
+                                <p className="truncate font-medium text-foreground">
+                                  {user.name}
+                                </p>
+                                <p className="truncate text-xs text-muted-foreground">
+                                  {user.email}
+                                </p>
+                              </div>
+                            </div>
+                          </td>
+                        )}
+                        {visibleColumns.userId && (
+                          <td className="px-4 py-3 text-xs font-mono text-muted-foreground">
+                            {String(userId).slice(-8)}
+                          </td>
+                        )}
+                        {visibleColumns.storage && (
+                          <td className="px-4 py-3">
+                            <div className="space-y-1">
+                              <div className="text-sm font-medium text-foreground">
+                                {usedFormatted} / {limitGB}
+                              </div>
+                              <Progress
+                                value={pct}
+                                className="h-1.5 w-20"
+                              />
+                            </div>
+                          </td>
+                        )}
+                        {visibleColumns.status && (
+                          <td className="px-4 py-3">
+                            <Badge
+                              variant="outline"
+                              className={cn('font-medium capitalize', statusColors[status])}
+                            >
+                              {status === 'active' && (
+                                <span className="mr-1.5 h-1.5 w-1.5 rounded-full bg-emerald-500" />
+                              )}
+                              {status}
+                            </Badge>
+                          </td>
+                        )}
+                        {visibleColumns.role && (
+                          <td className="px-4 py-3">
+                            <Badge
+                              variant="outline"
+                              className={cn('font-medium', roleColors[role] || roleColors['user'])}
+                            >
+                              {roleLabels[role] || role}
+                            </Badge>
+                          </td>
+                        )}
+                        {visibleColumns.createdAt && (
+                          <td className="px-4 py-3 text-sm text-muted-foreground">
+                            {user.createdAt ? format(new Date(user.createdAt), 'MMM dd, yyyy') : 'N/A'}
+                          </td>
+                        )}
+                        {visibleColumns.actions && (
+                          <td className="px-4 py-3 text-right">
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  className="h-8 w-8"
+                                >
+                                  <MoreHorizontal className="h-4 w-4" />
+                                </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end">
+                                <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                                <DropdownMenuSeparator />
+                                <DropdownMenuItem
+                                  disabled={!canEdit}
+                                  onClick={() => canEdit && handleEditUser(user)}
+                                >
+                                  <Pencil className="mr-2 h-3.5 w-3.5" />
+                                  {canEdit ? 'Edit' : 'Edit (Admin Only)'}
+                                </DropdownMenuItem>
+                                <DropdownMenuItem
+                                  onClick={() => handleForceLogout(user)}
+                                  className="text-amber-600"
+                                >
+                                  <LogOut className="mr-2 h-3.5 w-3.5" />
+                                  Force Logout
+                                </DropdownMenuItem>
+                                {isAdmin && (
+                                  <>
+                                    <DropdownMenuSeparator />
+                                    <DropdownMenuItem
+                                      onClick={() => handleDeleteUser(user)}
+                                      className="text-red-600"
+                                    >
+                                      <Trash2 className="mr-2 h-3.5 w-3.5" />
+                                      Delete
+                                    </DropdownMenuItem>
+                                  </>
+                                )}
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                          </td>
+                        )}
+                      </tr>
+                    )
+                  })
+                )}
               </tbody>
             </table>
           </div>
-
-          {paginatedUsers.length === 0 && (
-            <div className="flex flex-col items-center justify-center py-12">
-              <p className="text-muted-foreground">No users found</p>
-            </div>
-          )}
         </div>
 
         {/* Pagination */}
@@ -635,7 +640,7 @@ export default function UsersTable() {
                   <SelectItem value="50">50</SelectItem>
                 </SelectContent>
               </Select>
-              <span className="text-sm text-muted-foreground">of {filteredUsers.length}</span>
+              <span className="text-sm text-muted-foreground">of {totalCount}</span>
             </div>
 
             <div className="flex items-center gap-2">
@@ -666,6 +671,7 @@ export default function UsersTable() {
         <EditUserModal
           open={!!editingUser}
           user={editingUser}
+          currentRole={currentRole}
           onOpenChange={(open) => !open && setEditingUser(null)}
           onSave={handleSaveUser}
         />

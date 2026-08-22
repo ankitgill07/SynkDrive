@@ -1,0 +1,55 @@
+name: Deploy Client
+
+on: [push, workflow_dispatch]
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    env:
+      S3_BUCKET_NAME: synkdrive-frontend
+      CLOUDFRONT_DISTRIBUTION_ID: E3BZZV9T5KDEER
+      VITE_GOOGLE_CLIENT_ID: 750160779960-7ggoqjduds5ipmrmbmutcvpv3kmsatg2.apps.googleusercontent.com
+      VITE_APP_GOOGLE_API_KEY: AIzaSyB1LTOcjyAPlarMwiDqz8Xq_JDkgbaR2Bs
+      VITE_APP_RAZORPAY_API_KEY: rzp_test_SSC4KlMc0gpJjI
+      VITE_BACKEND_BASE_URL: https://api.synkdrive.in
+
+    defaults:
+      run:
+        working-directory: client
+
+    steps:
+      - name: Clone frontend repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run tests
+        run: npm test
+
+      - name: Build app
+        run: npm run build
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Upload to S3
+        run: aws s3 sync client/dist/ "s3://${S3_BUCKET_NAME}/" --delete
+
+      - name: Invalidate CloudFront
+        run: |
+          aws cloudfront create-invalidation \
+            --distribution-id "$CLOUDFRONT_DISTRIBUTION_ID" \
+            --paths "/index.html"
+
+      - name: Deployment complete
+        run: echo "Frontend Deployed Successfully..."

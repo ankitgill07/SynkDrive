@@ -7,12 +7,26 @@ import {
   S3Client,
 } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
+import fs from "fs";
+
+export const s3UploadFile = async ({ filePath, key, contentType }) => {
+  const fileStream = fs.createReadStream(filePath);
+  const command = new PutObjectCommand({
+    Bucket: "synkdrive",
+    Key: key,
+    Body: fileStream,
+    ContentType: contentType,
+  });
+  return await s3Client.send(command);
+};
+
 
 const s3Client = new S3Client({
   credentials: {
     accessKeyId: process.env.AWS_ACCESS_KEY_ID,
     secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
   },
+  region: process.env.AWS_REGION || "us-east-1",
 });
 
 export const s3UploadPresignedUrl = async (fullFileName, type) => {
@@ -34,8 +48,7 @@ export const s3GetPreSignedUrl = async ({ key, fileName }) => {
   const command = new GetObjectCommand({
     Bucket: "synkdrive",
     Key: key,
-    ContentType: "application/zip",
-    ResponseContentDisposition: `"attachment"; filename=${encodeURIComponent(fileName)}`,
+    ResponseContentDisposition: `attachment; filename="${encodeURIComponent(fileName)}"; filename*=UTF-8''${encodeURIComponent(fileName)}`,
   });
   const getUrl = await getSignedUrl(s3Client, command, {
     expiresIn: 3600,

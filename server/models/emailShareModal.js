@@ -4,27 +4,36 @@ const emailShareSchema = new mongoose.Schema(
   {
     fileId: {
       type: mongoose.Types.ObjectId,
+      ref: "file",
       required: true,
     },
     sharedBy: {
       type: mongoose.Types.ObjectId,
+      ref: "user",
       required: true,
     },
-    email: {
+    sharedWith: [
+      {
+
+        userId: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: "user",
+          required: true,
+        },
+        permission: {
+          type: String,
+          enum: ["viewer", "editor"],
+          default: "viewer",
+        },
+        accessTokenHash: {
+          type: String,
+          required: true,
+        },
+      },
+    ],
+    message: {
       type: String,
-      required: true,
-      lowercase: true,
-      trim: true,
-      match: /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/,
-    },
-    permission: {
-      type: String,
-      enum: ["viewer", "editor"],
-      default: "viewer",
-    },
-    accessTokenHash: {
-      type: String,
-      required: true,
+      default: null,
     },
     isRevoked: {
       type: Boolean,
@@ -38,7 +47,6 @@ const emailShareSchema = new mongoose.Schema(
     timestamps: true,
   },
 );
-emailShareSchema.index({ fileId: 1, email: 1 }, { unique: true });
-emailShareSchema.index({ accessTokenHash: 1 });
+
 const emailShare = model("emailShare", emailShareSchema);
 export default emailShare;

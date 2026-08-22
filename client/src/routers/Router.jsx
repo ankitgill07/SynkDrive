@@ -2,6 +2,7 @@ import MainLayout from "@/layout/MainLayout";
 import Auth from "@/Pages/Auth";
 import { createBrowserRouter, Navigate } from "react-router-dom";
 import ProtectedRoute from "./ProtectedRoute";
+import RoleProtectedRoute from "./RoleProtectedRoute";
 import PublicRoute from "./PublicRouter";
 import ActionCard from "@/components/storage/ActionCard";
 import DriveHome from "@/drive/DriveHome";
@@ -17,10 +18,11 @@ import SharedLayout from "@/layout/SharedLayout";
 import DashboardLayout from "@/Pages/Admin/dashboard-layout";
 import SharePage from "@/Pages/share/SharePage";
 import EmailSharePage from "@/Pages/share/EmailSharePage";
-import  PricingPage  from "@/Pages/subscriptions/PricingPage";
+import PricingPage from "@/Pages/subscriptions/PricingPage";
 import CheckoutPage from "@/Pages/subscriptions/CheckoutPage";
 import SubscriptionLayout from "@/layout/SubscriptionLayout";
 import SubscriptionManagePage from "@/Pages/subscriptions/SubscriptionManagePage";
+import NotFoundPage from "@/Pages/NotFoundPage";
 
 const router = createBrowserRouter([
   {
@@ -97,7 +99,7 @@ const router = createBrowserRouter([
       </ProtectedRoute>
     ),
   },
-    {
+  {
     path: "/drive/subscription",
     element: (
       <ProtectedRoute>
@@ -106,11 +108,19 @@ const router = createBrowserRouter([
     ),
   },
   {
+    path: "/admin/dashboard",
+    element: (
+      <RoleProtectedRoute>
+        <DashboardLayout />
+      </RoleProtectedRoute>
+    ),
+  },
+  {
     path: "/admin/dashbord",
     element: (
-      <ProtectedRoute>
+      <RoleProtectedRoute>
         <DashboardLayout />
-      </ProtectedRoute>
+      </RoleProtectedRoute>
     ),
   },
   {
@@ -152,6 +162,10 @@ const router = createBrowserRouter([
   {
     path: "/auth/error",
     element: <h2>error</h2>,
+  },
+  {
+    path: "*",
+    element: <NotFoundPage />,
   },
 ]);
 

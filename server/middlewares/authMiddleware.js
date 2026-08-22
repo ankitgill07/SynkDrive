@@ -7,20 +7,20 @@ export async function checkAuth(req, res, next) {
   const { sid } = req.signedCookies;
   try {
     if (!sid) {
-      return res.status(401).json({ error: "Unauthorized" });
+      return errorResponse(res, StatusCodes.UNAUTHORIZED, "Unauthorized. Please log in again.");
     }
 
     const session = await redisClient.json.get(`session:${sid}`);
 
     if (!session) {
-      return res.status(401).json({ error: "Session expired. Please log in again." });
+      return errorResponse(res, StatusCodes.UNAUTHORIZED, "Session expired. Please log in again.");
     }
     await redisClient.json.set(`session:${sid}`, "$.lastActive", Date.now());
 
     const user = await Users.findById(session.userId);
 
     if (!user) {
-      return res.status(401).json({ error: "User not found" });
+      return errorResponse(res, StatusCodes.UNAUTHORIZED, "User not found");
     } else if (user.isDisable) {
       return errorResponse(
         res,
@@ -34,4 +34,22 @@ export async function checkAuth(req, res, next) {
   } catch (error) {
     next(error);
   }
+}
+
+export function requireRole(allowedRoles) {
+  return (req, res, next) => {
+    try {
+      if (!req.user || !req.user.role) {
+        return errorResponse(res, StatusCodes.FORBIDDEN, "Access denied. Role not found.");
+      }
+      const userRole = req.user.role.toLowerCase();
+      const roles = allowedRoles.map((role) => role.toLowerCase());
+      if (!roles.includes(userRole)) {
+        return errorResponse(res, StatusCodes.FORBIDDEN, "Access denied. Insufficient permissions.");
+      }
+      next();
+    } catch (error) {
+      next(error);
+    }
+  };
 }

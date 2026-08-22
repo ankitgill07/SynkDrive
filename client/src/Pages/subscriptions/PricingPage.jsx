@@ -1,18 +1,27 @@
 import { useState } from "react";
 import { PLAN_LIST, getPricing, fmtINR } from "./Plans";
- 
+import { userAuth } from "@/contextApi/AuthContext";
+
 export default function PricingPage({ onSelectPlan }) {
   const [billing, setBilling] = useState("monthly");
- 
+  const { user } = userAuth() || {};
+  
+  const currentPlanId = user?.planId || "free";
+  const subscriptionStatus = user?.subscriptionStatus || "free";
+  const hasActiveSub = !!(user?.hasActiveSubscription || user?.subscriptionsId || (subscriptionStatus && subscriptionStatus !== "free" && subscriptionStatus !== "cancelled" && subscriptionStatus !== "expired"));
+
+  const currentPlan = PLAN_LIST.find(p => p.id === currentPlanId) || PLAN_LIST[0];
+  const currentPlanPrice = billing === "yearly" ? currentPlan.yearly.price : currentPlan.monthly.price;
+
   return (
     <div className="min-h-screen bg-[#F7F5F2]">
- 
+
       {/* ── Hero ── */}
       <div className="text-center px-6 pt-14 pb-10 max-w-2xl mx-auto">
         <span className="inline-block bg-blue-50 text-[#155dfc] text-[11px] font-bold tracking-widest uppercase px-4 py-1.5 rounded-full mb-5">
           Simple Pricing
         </span>
- 
+
         <h1 className="text-5xl font-black text-gray-900 tracking-tighter leading-[1.08] mb-4">
           Choose Your<br />
           <span className="text-[#155dfc]">Storage Plan</span>
@@ -21,7 +30,7 @@ export default function PricingPage({ onSelectPlan }) {
           Transparent pricing for every level of storage need.
           No hidden fees. Cancel anytime.
         </p>
- 
+
         {/* Billing toggle */}
         <div className="inline-flex bg-white border border-gray-200 rounded-full p-1 gap-1 shadow-sm">
           {["monthly", "yearly"].map((b) => (
@@ -29,7 +38,7 @@ export default function PricingPage({ onSelectPlan }) {
               key={b}
               onClick={() => setBilling(b)}
               className={`
-                px-6 py-2.5 rounded-full text-[13px] font-bold transition-all duration-200
+                px-6 py-2.5 rounded-full text-[13px] font-bold transition-all duration-200 cursor-pointer
                 ${billing === b
                   ? "bg-[#155dfc] text-white shadow-md shadow-blue-200"
                   : "text-gray-400 hover:text-gray-700"}
@@ -39,93 +48,130 @@ export default function PricingPage({ onSelectPlan }) {
             </button>
           ))}
         </div>
- 
+
         {billing === "yearly" && (
           <p className="text-green-600 text-sm font-bold mt-3">
             ✦ Save 20% with yearly billing
           </p>
         )}
       </div>
- 
+
       {/* ── Plan Cards ── */}
-      <div className="max-w-8xl mx-auto px-5 pb-20 flex flex-wrap justify-center gap-4 items-end">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-20 flex flex-wrap justify-center gap-6 items-stretch md:items-end">
         {PLAN_LIST.map((plan) => {
           const { price } = getPricing(plan, billing);
           const isPop = plan.badge === "Most Popular";
- 
+          
+          const isCurrent = plan.id === currentPlanId && (hasActiveSub || plan.id === "free");
+          
+          let buttonText = plan.cta;
+          let isButtonDisabled = false;
+          
+          if (isCurrent) {
+            buttonText = "Current Plan";
+            isButtonDisabled = true;
+          } else if (hasActiveSub) {
+            if (plan.id === "free") {
+              buttonText = "Downgrade";
+            } else if (price > currentPlanPrice) {
+              buttonText = "Upgrade";
+            } else {
+              buttonText = "Downgrade";
+            }
+          }
+
           return (
             <div
               key={plan.id}
-              onClick={() => onSelectPlan(plan, billing)}
+              onClick={() => {
+                if (isCurrent) return;
+                onSelectPlan(plan, billing);
+              }}
               className={`
-                relative flex flex-col flex-1 min-w-[300px] max-w-[250px] rounded-2xl cursor-pointer
+                relative flex flex-col w-full sm:w-[280px] md:w-[300px] rounded-2xl cursor-pointer
                 transition-all duration-200 hover:-translate-y-1.5 group
-                ${isPop
-                  ? "bg-[#155dfc] shadow-2xl shadow-blue-300 -translate-y-3"
-                  : "bg-white border border-gray-200 shadow-sm hover:shadow-lg hover:shadow-blue-100"}
+                ${isCurrent
+                  ? "border-2 border-emerald-500 bg-white shadow-xl shadow-emerald-50"
+                  : isPop
+                    ? "bg-[#155dfc] shadow-2xl shadow-blue-300 md:-translate-y-3"
+                    : "bg-white border border-gray-200 shadow-sm hover:shadow-lg hover:shadow-blue-100"}
               `}
-              style={{ padding: isPop ? "36px 24px 24px" : "24px" }}
+              style={{ padding: (isPop && !isCurrent) ? "36px 24px 24px" : "24px" }}
             >
+              {/* Current Plan badge */}
+              {isCurrent && (
+                <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-emerald-500 text-white text-[10px] font-black tracking-widest uppercase px-4 py-1.5 rounded-full shadow-lg whitespace-nowrap flex items-center gap-1">
+                  ✓ Current Plan
+                </div>
+              )}
+
               {/* Popular badge */}
-              {isPop && (
+              {isPop && !isCurrent && (
                 <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-white text-[#155dfc] text-[10px] font-black tracking-widest uppercase px-4 py-1.5 rounded-full shadow-lg whitespace-nowrap">
                   ★ Most Popular
                 </div>
               )}
- 
+
               {/* Plan name */}
-              <p className={`text-base font-black mb-2 ${isPop ? "text-white" : "text-gray-900"}`}>
+              <p className={`text-base font-black mb-2 ${(isPop && !isCurrent) ? "text-white" : "text-gray-900"}`}>
                 {plan.name}
               </p>
- 
+
               {/* Price */}
               <div className="flex items-baseline gap-1 mb-1.5">
-                <span className={`text-4xl font-black tracking-tighter leading-none ${isPop ? "text-white" : "text-gray-900"}`}>
+                <span className={`text-4xl font-black tracking-tighter leading-none ${(isPop && !isCurrent) ? "text-white" : "text-gray-900"}`}>
                   ₹{price}
                 </span>
                 {price > 0 && (
-                  <span className={`text-xs mb-1 ${isPop ? "text-blue-200" : "text-gray-400"}`}>
+                  <span className={`text-xs mb-1 ${(isPop && !isCurrent) ? "text-blue-200" : "text-gray-400"}`}>
                     /mo
                   </span>
                 )}
               </div>
- 
-              <p className={`text-xs leading-relaxed mb-4 ${isPop ? "text-blue-200" : "text-gray-400"}`}>
+
+              <p className={`text-xs leading-relaxed mb-4 ${(isPop && !isCurrent) ? "text-blue-200" : "text-gray-400"}`}>
                 {plan.desc}
               </p>
- 
+
               {/* Features */}
               <ul className="space-y-2 mb-6 flex-1">
                 {plan.features.map((f) => (
                   <li key={f} className="flex items-center gap-2">
                     <span className={`
                       w-4 h-4 rounded-full flex items-center justify-center text-[8px] font-black flex-shrink-0
-                      ${isPop ? "bg-white/20 text-white" : "bg-blue-50 text-[#155dfc]"}
+                      ${(isPop && !isCurrent) ? "bg-white/20 text-white" : "bg-blue-50 text-[#155dfc]"}
                     `}>✓</span>
-                    <span className={`text-[12.5px] ${isPop ? "text-blue-100" : "text-gray-500"}`}>
+                    <span className={`text-[12.5px] ${(isPop && !isCurrent) ? "text-blue-100" : "text-gray-500"}`}>
                       {f}
                     </span>
                   </li>
                 ))}
               </ul>
- 
+
               {/* CTA */}
               <button
-                onClick={(e) => { e.stopPropagation(); onSelectPlan(plan, billing); }}
+                disabled={isButtonDisabled}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  if (isCurrent) return;
+                  onSelectPlan(plan, billing);
+                }}
                 className={`
-                  w-full py-3 rounded-xl text-sm font-bold transition-all duration-150 active:scale-95
-                  ${isPop
-                    ? "bg-white text-[#155dfc] hover:bg-blue-50"
-                    : "border-2 border-[#155dfc] text-[#155dfc] hover:bg-blue-50"}
+                  w-full py-3 rounded-xl text-sm font-bold transition-all duration-150 active:scale-95 cursor-pointer
+                  ${isCurrent
+                    ? "bg-slate-100 text-slate-400 cursor-not-allowed border border-slate-200"
+                    : (isPop && !isCurrent)
+                      ? "bg-white text-[#155dfc] hover:bg-blue-50"
+                      : "border-2 border-[#155dfc] text-[#155dfc] hover:bg-blue-50"}
                 `}
               >
-                {plan.cta} →
+                {buttonText} {!isCurrent && "→"}
               </button>
             </div>
           );
         })}
       </div>
- 
+
       {/* Trust bar */}
       <div className="max-w-3xl mx-auto px-6 pb-16">
         <div className="bg-white border border-gray-100 rounded-2xl px-8 py-6 flex flex-wrap justify-center gap-8 shadow-sm">
@@ -143,8 +189,7 @@ export default function PricingPage({ onSelectPlan }) {
           ))}
         </div>
       </div>
- 
+
     </div>
   );
 }
- 

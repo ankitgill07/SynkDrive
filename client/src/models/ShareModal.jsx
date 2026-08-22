@@ -10,24 +10,27 @@ import {
 } from "lucide-react";
 import useShare from "@/hooks/useShare";
 import { useForm } from "react-hook-form";
+import SharebyEamile from "./SharebyEmaile";
 
-export default function ShareModal({ onClose, items }) {
-  const {
-    activeTab,
-    setActiveTab,
-    linkEnabled,
-    linkPermission,
-    handleToggle,
-    shareLink,
-    handleCopyLink,
-    handleChangePermission,
-    copied,
-    isLoading,
-    handleSendFileWitEmail,
-    setEmail,
-    email,
-  } = useShare(items);
-
+export default function ShareModal({
+  onClose,
+  items,
+  activeTab,
+  setActiveTab,
+  linkEnabled,
+  linkPermission,
+  handleToggle,
+  shareLink,
+  handleCopyLink,
+  handleChangePermission,
+  copied,
+  isLoading,
+  handleSendFileWithEmail,
+  handleGetPeopleAccessFile,
+  setEmail,
+  email,
+  shareByEmail,
+}) {
   const [selectedRole, setSelectedRole] = useState("Viewer");
   const {
     register,
@@ -140,7 +143,7 @@ export default function ShareModal({ onClose, items }) {
           >
             <div className="flex items-center gap-2">
               <span>Shared With</span>
-              {users.length > 0 && (
+              {shareByEmail?.length > 0 && (
                 <span className="bg-[#155dfc] text-white text-xs px-2 py-0.5 rounded-full">
                   {users.length}
                 </span>
@@ -300,93 +303,7 @@ export default function ShareModal({ onClose, items }) {
               )}
 
               {/* Email Invite Tab */}
-              {activeTab === "email" && (
-                <div className="p-6 space-y-4">
-                  <div>
-                    <h3 className="text-sm font-semibold text-gray-900 mb-4">
-                      Invite People by Email
-                    </h3>
-
-                    <form
-                      onSubmit={handleSubmit(handleSendFileWitEmail)}
-                      action=""
-                    >
-                      <div className="space-y-3">
-                        <div className="flex gap-2">
-                          <input
-                            type="email"
-                            name="email"
-                            {...register("email", {
-                              required: "Email is required",
-                              pattern: {
-                                value: /\S+@\S+\.\S+/,
-                                message: "Invalid email address",
-                              },
-                            })}
-                            placeholder="Enter email address"
-                            className="flex-1 px-4 py-3 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#155dfc] focus:ring-offset-0"
-                          />
-                          <select
-                            name="role"
-                            {...register("role")}
-                            className="px-4 py-3 border border-gray-200 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-[#155dfc] focus:ring-offset-0"
-                          >
-                            <option value="viewer">Viewer</option>
-                            <option value="editor">Editor</option>
-                            <option value="admin">Admin</option>
-                          </select>
-                        </div>
-                        {errors.email && (
-                          <p className="text-red-500 pt-1  text-sm  font-medium font-inter">
-                            {errors.email.message}
-                          </p>
-                        )}
-                        <button
-                          type="submit"
-                          disabled={isLoading}
-                          className="w-full px-4 py-3 bg-[#155dfc] text-white rounded-lg font-medium hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2 active:scale-95"
-                        >
-                          <Mail size={18} />
-                          {isLoading ? "Sending Invite..." : "Send Invite"}
-                        </button>
-                      </div>
-                    </form>
-                  </div>
-
-                  {users.length > 0 && (
-                    <>
-                      <div className="h-px bg-gray-200" />
-                      <div>
-                        <h4 className="text-sm font-semibold text-gray-900 mb-3">
-                          Recently Invited
-                        </h4>
-                        <div className="space-y-2 max-h-48 overflow-y-auto">
-                          {users.map((user) => (
-                            <div
-                              key={user.id}
-                              className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
-                            >
-                              <div className="flex items-center gap-3">
-                                <div className="w-8 h-8 bg-[#155dfc] text-white rounded-full flex items-center justify-center text-xs font-semibold">
-                                  {user.avatar}
-                                </div>
-                                <div>
-                                  <p className="text-sm font-medium text-gray-900">
-                                    {user.email}
-                                  </p>
-                                  <p className="text-xs text-gray-500">
-                                    {user.role}
-                                  </p>
-                                </div>
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    </>
-                  )}
-                </div>
-              )}
+              {activeTab === "email" && <SharebyEamile items={items} />}
 
               {/* Shared With Tab */}
               {activeTab === "shared" && (
@@ -395,7 +312,7 @@ export default function ShareModal({ onClose, items }) {
                     People with Access
                   </h3>
 
-                  {users.length === 0 ? (
+                  {!shareByEmail || shareByEmail?.length === 0 ? (
                     <div className="text-center py-12">
                       <p className="text-sm text-gray-500">
                         No one has access yet
@@ -406,32 +323,26 @@ export default function ShareModal({ onClose, items }) {
                     </div>
                   ) : (
                     <div className="space-y-2">
-                      {users.map((user) => (
+                      {shareByEmail?.map((user) => (
                         <div
                           key={user.id}
                           className="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
                         >
                           <div className="flex items-center gap-3 min-w-0">
-                            <div className="w-10 h-10 bg-[#155dfc] text-white rounded-full flex items-center justify-center text-sm font-semibold ">
-                              {user.avatar}
+                            <div className="w-10 h-10   rounded-full flex items-center justify-center text-sm font-semibold ">
+                              <img className=" rounded-full"
+                                src={`${user.picture}`}
+                                alt="avatar"
+                              />
                             </div>
                             <div className="min-w-0">
-                              <p className="text-sm font-medium text-gray-900 truncate">
-                                {user.name}
-                              </p>
-                              <p className="text-xs text-gray-500 truncate">
-                                {user.email}
+                              <p className=" font-inter font-medium truncate">
+                                {user?.email}
                               </p>
                             </div>
                           </div>
-
                           <div className="flex items-center gap-2 ">
-                            <select className="px-3 py-1.5 text-xs font-medium border border-gray-200 rounded-lg bg-white focus:outline-none focus:ring-1 focus:ring-[#155dfc]">
-                              <option value="Viewer">Viewer</option>
-                              <option value="Editor">Editor</option>
-                              <option value="Admin">Admin</option>
-                            </select>
-
+                            <button>{user.permission}</button>
                             <button
                               className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors "
                               aria-label="Remove user"

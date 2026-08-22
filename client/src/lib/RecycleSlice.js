@@ -29,7 +29,12 @@ const recycleSlice = createSlice({
     },
     selectAllTrashData: (state) => {
       state.recycleItems.forEach((data) => {
-        data.selected = !data.selected;
+        data.selected = true;
+      });
+    },
+    deselectAllTrashData: (state) => {
+      state.recycleItems.forEach((data) => {
+        data.selected = false;
       });
     },
     deleteSelectedtrashData: (state) => {
@@ -43,6 +48,7 @@ export const {
   setChildFolderData,
   toggleData,
   selectAllTrashData,
+  deselectAllTrashData,
   deleteSelectedtrashData,
 } = recycleSlice.actions;
 export default recycleSlice.reducer;

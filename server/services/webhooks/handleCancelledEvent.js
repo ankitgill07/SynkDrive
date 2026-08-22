@@ -1,6 +1,7 @@
 import Subscription from "../../models/subscriptionModal.js";
 import Users from "../../models/userModel.js";
-import { getPlanById } from "../../utils/getPlanDetails.js";
+import { disableUserService } from "../../utils/serviceControl.js";
+import { sendEventToUser } from "../../controllers/eventController.js";
 
 export const handleCancelledEvent = async (webhookData) => {
   try {
@@ -18,42 +19,37 @@ export const handleCancelledEvent = async (webhookData) => {
       throw new Error(`Expected status 'cancelled', got '${status}'`);
     }
 
-    const user = await Users.findById(userId);
-    if (!user) {
-      throw new Error(`User not found: ${userId}`);
-    }
-
     const subscription = await Subscription.findOne({
       subscriptions_id: id,
-      userId: user._id,
+      userId,
     });
 
-    if (!subscription) {
-      throw new Error(`Subscription not found: ${id}`);
+    if (subscription) {
+      subscription.status = status;
+      subscription.cancelledAt = new Date();
+      await subscription.save();
     }
 
-    if (subscription.status === "cancelled") {
-      return { success: true, skipped: true, reason: "already_cancelled" };
-    }
+    await disableUserService(userId, "Webhook subscription cancelled");
 
-    subscription.status = status;
-    subscription.cancelledAt = new Date();
-    await subscription.save();
-
-    const freePlan = getPlanById("free");
-    if (freePlan) {
-      user.maxStorageLimite = freePlan.storageBytes;
-      user.maxDeviceLimit = freePlan.maxDevices;
-      user.maxFileSize = freePlan.maxFileSizeBytes;
-      user.restoreFileDays = freePlan.restoreFileDays;
+    const user = await Users.findById(userId);
+    if (user) {
       user.subscriptionsId = null;
       await user.save();
+    }
+
+    try {
+      sendEventToUser(userId, {
+        type: "subscriptionCancelled",
+        subscriptionId: id,
+      });
+    } catch (sseErr) {
+      console.warn("SSE notice:", sseErr.message);
     }
 
     return {
       success: true,
       subscriptionId: id,
-      cancelledAt: subscription.cancelledAt,
       downgradedTo: "free",
     };
   } catch (error) {

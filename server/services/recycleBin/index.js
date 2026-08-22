@@ -2,7 +2,7 @@ import File from "../../models/fileModel.js";
 import { getFolderSize } from "../../utils/helperUtil.js";
 import Folder from "../../models/folderModel.js ";
 import { s3DeleteObjects, s3DeletePreSingedUrl } from "../file/s3Servies.js";
-import { ObjectId } from "mongodb";
+import mongoose from "mongoose";
 
 export const softDeleteFile = async (fileId, userId) => {
   try {
@@ -87,7 +87,7 @@ export const folderDeleteParmanetly = async (id, userId) => {
 
       for (const { _id } of folders) {
         const { files: childFiles, folders: childFolders } =
-          await getFolderItems(new ObjectId(_id));
+          await getFolderItems(new mongoose.Types.ObjectId(_id));
         files = [...files, ...childFiles];
         folders = [...folders, ...childFolders];
       }

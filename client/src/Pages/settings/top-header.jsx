@@ -8,7 +8,7 @@ import { userAuth } from "@/contextApi/AuthContext";
 
 export function TopHeader() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const { user } = userAuth();
+  const { user, logout } = userAuth();
   return (
     <header className="fixed w-full   top-0 z-50 border-b   bg-white opacity-98  ">
       <div className="w-full px-6 py-2">
@@ -35,28 +35,38 @@ export function TopHeader() {
               >
                 <div className="text-right hidden sm:block">
                   <p className="text-sm font-medium text-foreground">
-                    {user.name}
+                    {user?.name}
                   </p>
                   <p className="text-xs text-muted-foreground">Premium</p>
                 </div>
                 <Avatar className="w-10 h-10 border-2 border-border">
-                  <AvatarImage src={user.picture} className="object-cover " />
-                  <AvatarFallback>{user.name}</AvatarFallback>
+                  <AvatarImage src={user?.picture} className="object-cover " />
+                  <AvatarFallback>{user?.name}</AvatarFallback>
                 </Avatar>
               </button>
               {isMenuOpen && (
                 <div className="absolute right-0 mt-2 w-48 bg-card border border-border rounded-lg shadow-lg py-2">
                   <div className="px-4 py-3 border-b border-border">
-                    <p className="font-semibold text-foreground">John Doe</p>
+                    <p className="font-semibold text-foreground">{user?.name}</p>
                     <p className="text-sm text-muted-foreground">
-                      john.doe@example.com
+                      {user?.email}
                     </p>
                   </div>
-                  <button className="w-full flex items-center gap-2 px-4 py-2 text-foreground hover:bg-secondary transition-colors">
+                  <Link
+                    to="/drive/profile"
+                    onClick={() => setIsMenuOpen(false)}
+                    className="w-full flex items-center gap-2 px-4 py-2 text-foreground hover:bg-secondary transition-colors"
+                  >
                     <Settings className="w-4 h-4" />
                     Settings
-                  </button>
-                  <button className="w-full flex items-center gap-2 px-4 py-2 text-destructive hover:bg-destructive/10 transition-colors border-t border-border">
+                  </Link>
+                  <button
+                    onClick={() => {
+                      setIsMenuOpen(false);
+                      logout();
+                    }}
+                    className="w-full flex items-center gap-2 px-4 py-2 text-destructive hover:bg-destructive/10 transition-colors border-t border-border"
+                  >
                     <LogOut className="w-4 h-4" />
                     Logout
                   </button>

@@ -1,4 +1,5 @@
 import { toast } from "sonner";
+import { verifySubscriptionApi } from "@/api/SubscriptionApi";
 
 export function loadRazorpaySDK() {
   return new Promise((resolve) => {
@@ -21,73 +22,123 @@ export function openRazorpayPopup({
   onFailed,
 }) {
   let waitingToastId = null;
+  let isHandled = false;
 
-  const eventSource = new EventSource(
-    `${import.meta.env.VITE_BACKEND_BASE_URL}/events?userId=${userId}`,
-  );
+  let eventSource = null;
+  try {
+    eventSource = new EventSource(
+      `${import.meta.env.VITE_BACKEND_BASE_URL}/events?userId=${userId}`,
+    );
 
-  eventSource.onmessage = (event) => {
-    const data = JSON.parse(event.data);
-    if (data.type === "subscriptionActivated") {
-      if (waitingToastId) toast.dismiss(waitingToastId);
-      eventSource.close();
+    eventSource.onmessage = (event) => {
+      try {
+        const data = JSON.parse(event.data);
+        if (data.type === "subscriptionActivated" && !isHandled) {
+          isHandled = true;
+          if (waitingToastId) toast.dismiss(waitingToastId);
+          eventSource.close();
 
-      onSuccess?.({
-        plan,
-        billing,
-        user: { id: userId },
-        txnId: data.txnId ?? subscriptionId,
-      });
-    }
-  };
+          onSuccess?.({
+            plan,
+            billing,
+            user: { id: userId },
+            txnId: data.txnId ?? subscriptionId,
+          });
+        }
+      } catch (err) {
+        console.error("SSE parse error:", err);
+      }
+    };
 
-  eventSource.onerror = (err) => {
-    console.error("SSE error:", err);
-    if (waitingToastId) toast.dismiss(waitingToastId);
-    eventSource.close();
+    eventSource.onerror = (err) => {
+      console.warn("SSE notice:", err);
+      if (eventSource) eventSource.close();
+    };
+  } catch (err) {
+    console.warn("SSE connection skipped:", err);
+  }
 
-  
-    onFailed?.({
-      plan,
-      billing,
-      user: { id: userId },
-      errorMsg: "Connection lost while confirming payment.",
-    });
-  };
+  const razorpayKey =
+    import.meta.env.VITE_APP_RAZORPAY_API_KEY ||
+    (razorpayMode === "live"
+      ? "rzp_live_RStZdfYFCYNQL7"
+      : "rzp_test_SSC4KlMc0gpJjI");
 
-  const rzp = new Razorpay({
-    key:
-      razorpayMode === "live"
-        ? "rzp_live_RStZdfYFCYNQL7"
-        : "rzp_test_SSC4KlMc0gpJjI",
-    name: "Storage App",
-    description: "Subscribe to premium storage plan",
-    image: "https://dzdw2zccyu2wu.cloudfront.net/overview/readme-typing.svg",
+  const rzp = new window.Razorpay({
+    key: razorpayKey,
+    name: "SynkDrive",
+    description: `Subscribe to ${plan?.name || "Premium"} Storage Plan`,
     subscription_id: subscriptionId,
+    theme: {
+      color: "#155dfc",
+    },
 
     handler: async function (response) {
-   
-      waitingToastId = toast.loading("Processing payment...", {
-        description: "Please wait while we confirm your payment",
+      waitingToastId = toast.loading("Confirming subscription...", {
+        description: "Please wait while we verify your payment",
       });
+
+      try {
+        const verifyRes = await verifySubscriptionApi({
+          razorpay_payment_id: response.razorpay_payment_id,
+          razorpay_subscription_id: response.razorpay_subscription_id || subscriptionId,
+          razorpay_signature: response.razorpay_signature,
+        });
+
+        if (waitingToastId) toast.dismiss(waitingToastId);
+        if (eventSource) eventSource.close();
+
+        if (verifyRes.success) {
+          isHandled = true;
+          toast.success("Payment verified successfully!");
+          onSuccess?.({
+            plan,
+            billing,
+            user: { id: userId },
+            txnId: response.razorpay_payment_id || subscriptionId,
+          });
+        } else {
+          toast.error(verifyRes.message || "Payment verification failed");
+          onFailed?.({
+            plan,
+            billing,
+            user: { id: userId },
+            errorMsg: verifyRes.message || "Payment verification failed",
+          });
+        }
+      } catch (err) {
+        if (waitingToastId) toast.dismiss(waitingToastId);
+        if (eventSource) eventSource.close();
+        console.error("Payment verification error:", err);
+        // If verify endpoint encountered network error, fallback to SSE if still running
+        if (!isHandled) {
+          onSuccess?.({
+            plan,
+            billing,
+            user: { id: userId },
+            txnId: response.razorpay_payment_id || subscriptionId,
+          });
+        }
+      }
     },
 
     modal: {
       ondismiss: function () {
         if (waitingToastId) toast.dismiss(waitingToastId);
-        eventSource.close();
-        toast.info("Payment window closed", {
-          description: "You cancelled the payment process.",
-          duration: 4000,
-        });
-    
+        if (eventSource) eventSource.close();
+        if (!isHandled) {
+          toast.info("Payment window closed", {
+            description: "You cancelled the payment process.",
+            duration: 4000,
+          });
+        }
       },
     },
   });
 
   rzp.on("payment.failed", function (response) {
     if (waitingToastId) toast.dismiss(waitingToastId);
-    eventSource.close();
+    if (eventSource) eventSource.close();
 
     onFailed?.({
       plan,
@@ -100,3 +151,4 @@ export function openRazorpayPopup({
 
   rzp.open();
 }
+

@@ -1,13 +1,13 @@
-import { ObjectId } from "mongodb";
+import mongoose from "mongoose";
 import File from "../models/fileModel.js";
 import emailShare from "../models/emailShareModal.js";
 import Users from "../models/userModel.js";
-import crypto, { verify } from "crypto";
+import crypto from "crypto";
 import { errorResponse } from "../utils/apiResponse.js";
 import { StatusCodes } from "http-status-codes";
 
 export default function (req, res, next, id) {
-  if (!ObjectId.isValid(id)) {
+  if (!mongoose.Types.ObjectId.isValid(id)) {
     return res.status(403).json({ error: `Invild ID ${id}` });
   }
   next();
@@ -31,15 +31,28 @@ export  async function validateEmailShare (req , res , next) {
     if (shareFile.isRevoked) {
       return errorResponse(res, StatusCodes.FORBIDDEN, "Access has been revoked");
     }
-      const validFileToken = crypto.createHash("sha256").update(token).digest("hex");
-    if (validFileToken !== shareFile.accessTokenHash) {
-      return errorResponse(res, StatusCodes.FORBIDDEN, "Invalid token");
-    }
-   if (user.email !== shareFile.email) {
+    const sharedUser = shareFile.sharedWith.find(
+      (item) => item.userId.toString() === user._id.toString()
+    );
+
+   if (!sharedUser) {
       return errorResponse(res, StatusCodes.UNAUTHORIZED, "User is not authorized");
     }
+
+    if (token) {
+      const validFileToken = crypto
+        .createHash("sha256")
+        .update(token)
+        .digest("hex");
+
+      if (validFileToken !== sharedUser.accessTokenHash) {
+        return errorResponse(res, StatusCodes.FORBIDDEN, "Invalid token");
+      }
+    }
+
       req.file = file
       req.shareFile = shareFile
+      req.sharedUser = sharedUser
       next()
     } catch (error) {
       next(error)

@@ -1,37 +1,30 @@
-import { searchQueryApi } from "@/api/SearchApi";
 import useFolder from "@/hooks/useFolder";
 import { renderFilePreview } from "@/utils/Helpers";
-import React, { useEffect, useState } from "react";
-import { useForm } from "react-hook-form";
+import React, { useState, useMemo } from "react";
+import { useSelector } from "react-redux";
 import { FaFolder } from "react-icons/fa";
 import { IoIosSearch, IoMdClose } from "react-icons/io";
-import { VscSettings } from "react-icons/vsc";
 
 function SearchPage() {
   const [isActive, setIsActive] = useState(false);
   const [searchInput, setSearchInput] = useState("");
-  const [files, setFiles] = useState([]);
-  const [folders, setFolders] = useState([]);
   
   const { handleOpen } = useFolder();
 
-  const handleSearchApi = async () => {
-    const result = await searchQueryApi(searchInput);
-    const { folders, files } = result.data;
-    setFiles(files);
-    setFolders(folders);
-  };
+  // Retrieve loaded items from Redux store
+  const items = useSelector((state) => state.folder.items) || [];
+
+  // Filter items in frontend
+  const searchResult = useMemo(() => {
+    if (!searchInput.trim()) return [];
+    return items.filter((item) =>
+      item.name.toLowerCase().includes(searchInput.toLowerCase())
+    );
+  }, [items, searchInput]);
 
   const handleSearchSubmit = (e) => {
     e.preventDefault();
-    handleSearchApi();
   };
-
-  useEffect(() => {
-    handleSearchApi();
-  }, [searchInput]);
-
-  const searchResult = [...folders, ...files];
 
   return (
     <>
@@ -105,25 +98,30 @@ function SearchPage() {
               <p className="text-xs text-gray-500 px-4 py-2 font-medium">
                 RECENT FILES
               </p>
-              {searchResult.map((data) => (
-                <div
-                  onClick={() => {
-                    setIsActive(false);
-                    setSearchInput("");
-                    handleOpen(data);
-                  }}
-                  className="flex items-center gap-3 px-4 py-2 hover:bg-gray-100 cursor-pointer rounded-lg mx-2 transition-colors"
-                >
-                  <div>
-                    {data?.type === "folder" ? (
-                      <FaFolder size={22} className="text-[#3F8EFC] " />
-                    ) : (
-                      renderFilePreview({ file: data, size: 22 })
-                    )}
+              {searchResult.length > 0 ? (
+                searchResult.map((data) => (
+                  <div
+                    key={data._id}
+                    onClick={() => {
+                      setIsActive(false);
+                      setSearchInput("");
+                      handleOpen(data);
+                    }}
+                    className="flex items-center gap-3 px-4 py-2 hover:bg-gray-100 cursor-pointer rounded-lg mx-2 transition-colors"
+                  >
+                    <div>
+                      {data?.type === "folder" ? (
+                        <FaFolder size={22} className="text-[#3F8EFC] " />
+                      ) : (
+                        renderFilePreview({ file: data, size: 22 })
+                      )}
+                    </div>
+                    <span className="text-sm text-gray-700">{data.name}</span>
                   </div>
-                  <span className="text-sm text-gray-700">{data.name}</span>
-                </div>
-              ))}
+                ))
+              ) : (
+                <p className="text-sm text-gray-400 px-4 py-2">No matching files or folders found</p>
+              )}
             </div>
           )}
         </div>

@@ -1,13 +1,14 @@
 import { formatTimestamp } from "@/utils/Helpers";
-import { PauseCircle, XCircle } from "lucide-react";
+import { PauseCircle, XCircle, PlayCircle } from "lucide-react";
 import React from "react";
 
 function SubscriptionModal({
   handlePausedSubscription,
   handleResumedSubscription,
+  handleCancelSubscription,
   setModal,
   modal,
-  subscriptionData
+  subscriptionData,
 }) {
   return (
     <div>
@@ -29,10 +30,7 @@ function SubscriptionModal({
                   Pause your subscription?
                 </h2>
                 <p className="text-sm text-slate-600 text-center leading-relaxed mb-8">
-                  Your plan pauses after{" "}
-                  {formatTimestamp(subscriptionData?.nextBillingDate)} You keep
-                  full Pro access until your billing period ends — no charges
-                  during the pause.
+                  Your plan will be paused. You won't be charged during the pause, and you can resume anytime to restore full access.
                 </p>
                 <div className="flex gap-3">
                   <button
@@ -60,8 +58,7 @@ function SubscriptionModal({
                   Cancel subscription?
                 </h2>
                 <p className="text-sm text-slate-600 text-center leading-relaxed mb-8">
-                  Cancelling stops all future billing. You keep Pro access until
-                  May 31, 2026. This action cannot be undone.
+                  Cancelling stops all future billing and resets your account to the Free tier. This action cannot be undone.
                 </p>
                 <div className="flex gap-3">
                   <button
@@ -71,7 +68,7 @@ function SubscriptionModal({
                     Keep plan
                   </button>
                   <button
-                    onClick={""}
+                    onClick={handleCancelSubscription}
                     className="flex-1 px-5 py-3 bg-red-600 text-white rounded-lg text-sm font-medium hover:bg-red-700 active:scale-95 transition-all"
                   >
                     Yes, cancel
@@ -91,9 +88,8 @@ function SubscriptionModal({
                 </h2>
 
                 <p className="text-sm text-slate-600 text-center leading-relaxed mb-8">
-                  Your {subscriptionData?.planName} subscription will resume
-                  immediately, and billing will continue from your next billing
-                  cycle on {formatTimestamp(subscriptionData?.nextBillingDate)}.
+                  Your {subscriptionData?.planName || "plan"} subscription will resume
+                  immediately, and all premium features and storage quotas will be active.
                 </p>
 
                 <div className="flex gap-3">
@@ -121,3 +117,4 @@ function SubscriptionModal({
 }
 
 export default SubscriptionModal;
+

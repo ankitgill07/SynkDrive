@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { PLAN_LIST, getPricing, fmtINR } from "./Plans";
 import { loadRazorpaySDK, openRazorpayPopup } from "../../utils/Razorpay";
-import { createSubscriptionApi } from "@/api/SubscriptionApi";
+import { createSubscriptionApi, activateFreePlanApi } from "@/api/SubscriptionApi";
 import { userAuth } from "@/contextApi/AuthContext";
 import { toast } from "sonner";
 
@@ -46,10 +46,26 @@ export default function CheckoutPage({
   async function handlePay() {
     setPaying(true);
     try {
+      if (isFree || plan.id === "free") {
+        const freeRes = await activateFreePlanApi();
+        if (freeRes.success) {
+          toast.success("Free plan activated!");
+          onSuccess?.({
+            plan,
+            billing,
+            user: { id: user?.id, ...form },
+            txnId: null,
+          });
+        } else {
+          toast.error(freeRes.message || "Failed to activate free plan");
+        }
+        return;
+      }
+
       const result = await createSubscriptionApi(plan.id);
 
       if (!result.success) {
-        toast.error(result.message);
+        toast.error(result.message || "Could not initialize checkout");
         return;
       }
 
@@ -61,7 +77,7 @@ export default function CheckoutPage({
 
       openRazorpayPopup({
         subscriptionId: result.data.subscriptionId,
-        userId: user.id,
+        userId: user?.id || user?._id,
         razorpayMode: "test",
         plan,
         billing,

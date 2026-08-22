@@ -21,16 +21,25 @@ export default function DeleteAlrightModal({
 
   const fullScreen = useMediaQuery(theme.breakpoints.down("md"));
 
+  const [isDeleting, setIsDeleting] = React.useState(false);
+
   const handleDeletePermanetly = async (id) => {
-    const type = items.type;
-    const result =
-      type === "folder" ? await deleteFolderApi(id) : await deleteFileApi(id);
-    allItems();
-    setOpenDelete(false);
-    if (result.success) {
-      toast.success(result.success);
-    } else {
-      toast.error(result.error);
+    setIsDeleting(true);
+    try {
+      const type = items.type;
+      const result =
+        type === "folder" ? await deleteFolderApi(id) : await deleteFileApi(id);
+      if (result.success) {
+        toast.success(result.success);
+        allItems();
+        setOpenDelete(false);
+      } else {
+        toast.error(result.error);
+      }
+    } catch (err) {
+      toast.error("Failed to delete permanently");
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -39,7 +48,7 @@ export default function DeleteAlrightModal({
       <Dialog
         fullScreen={fullScreen}
         open={openDelete}
-        onClose={() => setOpenDelete(false)}
+        onClose={() => !isDeleting && setOpenDelete(false)}
         aria-labelledby="responsive-dialog-title"
       >
         <DialogTitle id="responsive-dialog-title">
@@ -55,15 +64,20 @@ export default function DeleteAlrightModal({
             className=" px-4 py-1.5 bg-gray-100  font-inter font-medium cursor-pointer rounded-full  "
             autoFocus
             onClick={() => setOpenDelete(false)}
+            disabled={isDeleting}
           >
-            Cancle
+            Cancel
           </button>
           <button
-            className=" px-4 py-1.5 bg-red-600 text-white font-inter font-medium cursor-pointer rounded-full  "
+            className=" px-4 py-1.5 bg-red-600 text-white font-inter font-medium cursor-pointer rounded-full flex items-center gap-1.5"
             onClick={() => handleDeletePermanetly(items._id)}
+            disabled={isDeleting}
             autoFocus
           >
-            Delete
+            {isDeleting && (
+              <span className="animate-spin rounded-full h-3 w-3 border-2 border-white border-t-transparent" />
+            )}
+            {isDeleting ? "Deleting..." : "Delete"}
           </button>
         </DialogActions>
       </Dialog>

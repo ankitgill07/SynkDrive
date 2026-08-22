@@ -117,11 +117,13 @@ const rateLimiterConfig = {
   recycleGet         : [ 30,  _1m,  { message: "Recycle bin fetch limit exceeded.",                         keyGenerator: keyGenerators.user                     }],
   restoreSingle      : [ 20,  _1m,  { message: "Restore limit exceeded.",                                   keyGenerator: keyGenerators.user                     }],
   restoreBulk        : [ 10,  _1m,  { message: "Bulk restore limit exceeded.",                              keyGenerator: keyGenerators.user                     }],
-  subscriptionCreate : [ 5,   _15m,  { message: "Subscription create limit reached.",                        keyGenerator: keyGenerators.user, skipSuccess: true  }],
-  subscriptionStatus : [ 30,  _1m,  { message: "Subscription status fetch limit exceeded.",                 keyGenerator: keyGenerators.user                     }],
-  subscriptionPause  : [ 5,   _10m,  { message: "Subscription pause limit reached.",                         keyGenerator: keyGenerators.user                     }],
-  subscriptionResume : [ 5,   _10m,  { message: "Subscription resume limit reached.",                        keyGenerator: keyGenerators.user                     }],
-
+  subscriptionCreate : [ 15,  _15m,  { message: "Subscription create limit reached.",                        keyGenerator: keyGenerators.user, skipSuccess: true  }],
+  subscriptionVerify : [ 15,  _15m,  { message: "Subscription verify limit reached.",                        keyGenerator: keyGenerators.user, skipSuccess: true  }],
+  subscriptionFree   : [ 10,  _15m,  { message: "Free plan activation limit reached.",                       keyGenerator: keyGenerators.user, skipSuccess: true  }],
+  subscriptionStatus : [ 100, _1m,   { message: "Subscription status fetch limit exceeded.",                 keyGenerator: keyGenerators.user                     }],
+  subscriptionPause  : [ 15,  _10m,  { message: "Subscription pause limit reached.",                         keyGenerator: keyGenerators.user                     }],
+  subscriptionResume : [ 15,  _10m,  { message: "Subscription resume limit reached.",                        keyGenerator: keyGenerators.user                     }],
+  subscriptionCancel : [ 15,  _10m,  { message: "Subscription cancel limit reached.",                        keyGenerator: keyGenerators.user                     }],
 };
 
 export const Limiter = Object.fromEntries(
@@ -129,4 +131,4 @@ export const Limiter = Object.fromEntries(
     key,
     makeLimiter(limit, windowMs, options),
   ])
-);
+);

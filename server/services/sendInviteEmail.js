@@ -1,14 +1,15 @@
 import nodemailer from "nodemailer";
 import { getEmailTemplate } from "./getEmailTemplate.js";
 
-const testAccount = nodemailer.createTestAccount();
+
 
 const transporter = nodemailer.createTransport({
-  host: "smtp.ethereal.email",
-  port: 587,
+  secure: true,
+  host: "smtp.gmail.com",
+  port: 465,
   auth: {
-    user: "sanford.fay@ethereal.email",
-    pass: "a9cghhtftjc4UW9JfY",
+    user: "ankit930k@gmail.com",
+    pass: "kluqtczvsqmuixmd",
   },
 });
 

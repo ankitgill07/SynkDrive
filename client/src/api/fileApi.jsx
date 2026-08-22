@@ -1,12 +1,15 @@
 import axios from "axios";
 import { axiosInstance } from "./AxiosInstance";
 import JSZip from "jszip";
+import { getMimeType } from "@/utils/Helpers";
+
 export const uploadInitiateApi = async (id, fileObj) => {
   try {
+    const contentType = fileObj.type || getMimeType(fileObj.name);
     const response = await axiosInstance.post(
       `/file/upload/initiate/${id || ""}`,
       {
-        contentType: fileObj.type,
+        contentType: contentType,
         fileName: fileObj.name,
         size: fileObj.size,
       },
@@ -21,12 +24,13 @@ export const uploadFileS3Buket = async (
   uploadUrl,
   fileId,
   file,
+  contentType,
   updateProgress,
 ) => {
   try {
     const response = await axios.put(uploadUrl, file, {
       headers: {
-        "Content-Type": file.type,
+        "Content-Type": contentType || file.type || "application/octet-stream",
       },
       onUploadProgress: (progressEvent) => {
         const percentCompleted = Math.round(
@@ -38,7 +42,7 @@ export const uploadFileS3Buket = async (
 
     return response.status;
   } catch (error) {
-    return error.response.status;
+    return error.response?.status || 500;
   }
 };
 
@@ -49,7 +53,7 @@ export const uploadCompletedApi = async (fileId) => {
     );
     return response.data;
   } catch (error) {
-    return error.response.data;
+    return error.response?.data || { message: "Failed to mark upload completed" };
   }
 };
 
@@ -67,7 +71,7 @@ export const recycledFilebyId = async (fileId) => {
     const response = await axiosInstance.patch(`/file/${fileId}/delete`);
     return response?.data;
   } catch (error) {
-    return error.response.data;
+    return error.response?.data || { message: "Failed to delete file" };
   }
 };
 
@@ -99,29 +103,36 @@ export const bulkDownloadFileApi = async (fileId) => {
     a.remove();
     URL.revokeObjectURL(blobUrl);
   } catch (error) {
-    return error.response.data;
+    return error.response?.data || { message: "Failed to bulk download files" };
   }
 };
 
-export const importFormGoogeDiveApi = async (
-  payload,
-  setProgress = () => {},
-) => {
+export const importFormGoogeDiveApi = async (payload) => {
   try {
     const response = await axiosInstance.post(
       `/file/drive-import`,
       { files: payload },
-      {
-        onUploadProgress: (progressEvent) => {
-          const percentCompleted = Math.round(
-            (progressEvent.loaded * 100) / progressEvent.total,
-          );
-          console.log(percentCompleted);
-        },
-      },
     );
     return response.data;
   } catch (error) {
-    return error.response.data;
+    return error.response?.data;
+  }
+};
+
+export const getDownloadUrlApi = async (fileId) => {
+  try {
+    const response = await axiosInstance.get(`/file/${fileId}?action=download&json=true`);
+    return response.data;
+  } catch (error) {
+    return error.response?.data;
+  }
+};
+
+export const getPreviewUrlApi = async (fileId) => {
+  try {
+    const response = await axiosInstance.get(`/file/${fileId}?json=true`);
+    return response.data;
+  } catch (error) {
+    return error.response?.data;
   }
 };

@@ -12,9 +12,20 @@ import { Link, useLocation } from "react-router-dom";
 import useAction from "@/hooks/useAction";
 import { useDispatch, useSelector } from "react-redux";
 import { bulkSoftDeleteFileApi } from "@/api/RecycleBinApi";
-import { deleteSelectedItems } from "@/lib/FolderSlice";
+import { deleteSelectedItems, selectAll, deselectAll } from "@/lib/FolderSlice";
 import { bulkDownloadFileApi } from "@/api/fileApi";
 import { AnimatePresence } from "framer-motion";
+import { toast } from "sonner";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 function SwitchLayout({
   view,
@@ -32,6 +43,8 @@ function SwitchLayout({
   };
 
   const dispatch = useDispatch();
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const items = useSelector((state) => state.folder.items);
   const selectId = items
@@ -39,11 +52,19 @@ function SwitchLayout({
     .map((item) => item._id);
 
   const handleBulkDelete = async () => {
-    const { success, data } = await bulkSoftDeleteFileApi(selectId);
-    if (success) {
-      allData();
-      dispatch(deleteSelectedItems());
-      toast.success(data);
+    setIsDeleting(true);
+    try {
+      const { success, data } = await bulkSoftDeleteFileApi(selectId);
+      if (success) {
+        allData();
+        dispatch(deleteSelectedItems());
+        toast.success(data);
+      }
+    } catch (err) {
+      toast.error("Failed to delete selected items");
+    } finally {
+      setIsDeleting(false);
+      setDeleteConfirmOpen(false);
     }
   };
 
@@ -52,8 +73,8 @@ function SwitchLayout({
   };
 
   return (
-    <div className=" fixed  left-65 w-[calc(100%-260px)] z-10 px-4 py-3 bg-white top-34">
-      <div className="mb-6  flex justify-between items-center">
+    <div className="fixed left-0 lg:left-64 w-full lg:w-[calc(100%-256px)] z-10 px-4 py-3 bg-white top-[120px] lg:top-[136px] overflow-x-auto scrollbar-none">
+      <div className="mb-2 flex flex-wrap justify-between items-center gap-y-3">
         <div className="flex items-center gap-x-3 h-10">
           <AnimatePresence mode="wait">
             {selectId.length > 0 ? (
@@ -63,22 +84,46 @@ function SwitchLayout({
                 </p>
 
                 <button
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  onClick={handleBulkDelete}
-                  className="flex items-center gap-1 cursor-pointer font-inter bg-[#d9d4cc3b] text-gray-800 hover:bg-red-50 hover:text-red-600 rounded-full px-5 py-1.5 font-medium text-sm transition-colors"
+                  onClick={() => setDeleteConfirmOpen(true)}
+                  className="flex items-center gap-1 cursor-pointer font-inter bg-[#d9d4cc3b] text-gray-800 hover:bg-red-50 hover:text-red-600 rounded-full px-4 py-1 font-medium text-xs transition-colors shrink-0"
                 >
-                  <Trash size={18} />
+                  <Trash size={15} />
                   Delete
                 </button>
 
+                <AlertDialog open={deleteConfirmOpen} onOpenChange={setDeleteConfirmOpen}>
+                  <AlertDialogContent className="bg-card border-border">
+                    <AlertDialogHeader>
+                      <AlertDialogTitle className="text-foreground">
+                        Delete Selected Items?
+                      </AlertDialogTitle>
+                      <AlertDialogDescription className="text-muted-foreground">
+                        Are you sure you want to move the {selectId.length} selected items to the Recycle Bin?
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel disabled={isDeleting} className="bg-secondary text-foreground border-border hover:bg-secondary/80">
+                        Cancel
+                      </AlertDialogCancel>
+                      <AlertDialogAction
+                        onClick={(e) => {
+                          e.preventDefault();
+                          handleBulkDelete();
+                        }}
+                        disabled={isDeleting}
+                        className="bg-red-600 hover:bg-red-700 text-white flex items-center gap-2"
+                      >
+                        {isDeleting ? "Deleting..." : "Delete"}
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+
                 <button
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
                   onClick={handleBulkDownload}
-                  className="flex items-center gap-1 cursor-pointer font-inter bg-[#d9d4cc3b] text-gray-800 hover:bg-[#e9e8e8] rounded-full px-5 py-1.5 font-medium text-sm transition-colors"
+                  className="flex items-center gap-1 cursor-pointer font-inter bg-[#d9d4cc3b] text-gray-800 hover:bg-[#e9e8e8] rounded-full px-4 py-1 font-medium text-xs transition-colors shrink-0"
                 >
-                  <ArrowDownToLine size={18} />
+                  <ArrowDownToLine size={15} />
                   Download
                 </button>
               </div>

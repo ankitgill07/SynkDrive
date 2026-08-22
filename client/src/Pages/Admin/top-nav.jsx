@@ -1,11 +1,9 @@
-'use client'
-
-import { useState } from 'react'
-import { useDispatch, useSelector } from 'react-redux'
-import { cn } from '@/lib/utils'
-import { Bell, Search, LogOut } from 'lucide-react'
-import { Input } from '@/components/ui/input'
-import { Button } from '@/components/ui/button'
+import { useNavigate } from 'react-router-dom';
+import { cn } from '@/lib/utils';
+import { Bell, Search, LogOut, ArrowLeft, Shield, Menu } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -13,73 +11,79 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu'
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
+} from '@/components/ui/dropdown-menu';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
-export default function TopNav({ sidebarCollapsed }) {
-  const [searchQuery, setSearchQuery] = useState('')
-  const dispatch = useDispatch()
-  const { notifications } = useSelector((state) => state.dashboard)
-  const unreadCount = notifications.filter((n) => !n.read).length
+export default function TopNav({ sidebarCollapsed, user, logout, currentRole, onMenuClick }) {
+  const navigate = useNavigate();
+  const isAdmin = ['admin'].includes(currentRole);
+  const roleLabel = isAdmin ? 'Admin' : 'Manager';
+
+  const handleLogout = async () => {
+    await logout();
+    navigate('/auth');
+  };
+
+  const handleBackToDrive = () => {
+    navigate('/drive/home');
+  };
 
   return (
     <header
       className={cn(
-        'fixed right-0 top-0 z-30 flex h-16 items-center justify-between border-b border-border/50 bg-card px-6 transition-all duration-200 ease-in-out',
-        sidebarCollapsed ? 'left-[72px]' : 'left-[240px]'
+        'fixed right-0 top-0 z-30 flex h-16 items-center justify-between border-b border-border/50 bg-card px-4 sm:px-6 transition-all duration-200 ease-in-out left-0',
+        sidebarCollapsed ? 'lg:left-[72px]' : 'lg:left-[240px]'
       )}
     >
-      {/* Search */}
-      <div className="relative w-96">
-        <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-        <Input
-          type="search"
-          placeholder="Search users, files..."
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          className="h-10 w-full rounded-xl border-border/50 bg-background pl-10 transition-all duration-200 focus-visible:border-primary focus-visible:ring-primary"
-        />
+      
+      <div className="flex items-center gap-2 sm:gap-4">
+        {/* Mobile Menu Toggle Button */}
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={onMenuClick}
+          className="lg:hidden text-muted-foreground hover:text-foreground shrink-0"
+          title="Open menu"
+        >
+          <Menu className="h-5 w-5" />
+        </Button>
+
+        <Button
+          variant="ghost"
+          onClick={handleBackToDrive}
+          className="gap-2 text-muted-foreground hover:text-foreground transition-all duration-200 text-xs sm:text-sm px-2 sm:px-3"
+        >
+          <ArrowLeft className="h-4 w-4" />
+          <span className="hidden xs:inline">Back to Drive</span>
+        </Button>
+        <Badge variant="outline" className={cn('text-xs shrink-0', isAdmin ? 'bg-blue-50 text-blue-700 border-blue-200' : 'bg-amber-50 text-amber-700 border-amber-200')}>
+          <Shield className="h-3 w-3 mr-1" />
+          {roleLabel}
+        </Badge>
       </div>
 
       {/* Right Section */}
       <div className="flex items-center gap-4">
-        {/* Notifications */}
-        <div className="relative">
-          <Button
-            variant="ghost"
-            size="icon"
-            className="relative transition-all duration-200 hover:bg-muted"
-          >
-            <Bell className="h-5 w-5" />
-            {unreadCount > 0 && (
-              <span className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-destructive text-xs font-bold text-destructive-foreground">
-                {unreadCount}
-              </span>
-            )}
-          </Button>
-        </div>
-
         {/* User Menu */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button
               variant="ghost"
-              className="flex items-center gap-2 transition-all duration-200 hover:bg-muted"
+              className="flex items-center gap-2 transition-all duration-200 hover:bg-muted px-2"
             >
               <Avatar className="h-8 w-8">
-                <AvatarImage src="https://avatar.vercel.sh/admin" />
-                <AvatarFallback>AD</AvatarFallback>
+                <AvatarImage src={user?.picture} />
+                <AvatarFallback>{user?.name?.charAt(0)?.toUpperCase() || 'U'}</AvatarFallback>
               </Avatar>
-              <span className="hidden sm:inline text-sm font-medium">Admin</span>
+              <span className="hidden md:inline text-sm font-medium">{user?.name || 'User'}</span>
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-48">
-            <DropdownMenuLabel>My Account</DropdownMenuLabel>
+            <DropdownMenuLabel className="truncate">{user?.email}</DropdownMenuLabel>
             <DropdownMenuSeparator />
-            <DropdownMenuItem>Profile Settings</DropdownMenuItem>
-            <DropdownMenuItem>Preferences</DropdownMenuItem>
+            <DropdownMenuItem onClick={handleBackToDrive}>Back to Drive</DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem className="gap-2">
+            <DropdownMenuItem onClick={handleLogout} className="gap-2 text-destructive">
               <LogOut className="h-4 w-4" />
               Log Out
             </DropdownMenuItem>
@@ -87,5 +91,5 @@ export default function TopNav({ sidebarCollapsed }) {
         </DropdownMenu>
       </div>
     </header>
-  )
+  );
 }

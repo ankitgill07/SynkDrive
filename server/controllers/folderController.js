@@ -1,7 +1,6 @@
 import mongoose from "mongoose";
 import File from "../models/fileModel.js";
 import Folder from "../models/folderModel.js ";
-import { ObjectId } from "mongodb";
 import { getFolderSize } from "../utils/helperUtil.js";
 import { errorResponse, successResponse } from "../utils/apiResponse.js";
 import { StatusCodes } from "http-status-codes";
@@ -11,7 +10,7 @@ export const createNewFolder = async (req, res, next) => {
   const user = req.user;
   try {
     const parentFolderId = req.params.id
-      ? new ObjectId(req.params.id)
+      ? new mongoose.Types.ObjectId(req.params.id)
       : user.rootFolderId;
     const folderName = req.body.folderName;
 
@@ -32,7 +31,7 @@ export const createNewFolder = async (req, res, next) => {
       );
     }
 
-    const newId = new ObjectId();
+    const newId = new mongoose.Types.ObjectId();
     await Folder.create({
       _id: newId,
       userId: user._id,
@@ -49,7 +48,7 @@ export const createNewFolder = async (req, res, next) => {
 export const getAllFolders = async (req, res, next) => {
   const user = req.user;
   try {
-    const _id = req.params.id ? new ObjectId(req.params.id) : user.rootFolderId;
+    const _id = req.params.id ? new mongoose.Types.ObjectId(req.params.id) : user.rootFolderId;
     const folder = await Folder.findById(_id).populate({
       path: "path",
       select: "name _id",
@@ -83,7 +82,7 @@ export const renameFolderName = async (req, res, next) => {
   const folderName = req.body.name;
   try {
     const folder = await Folder.findOneAndUpdate(
-      { _id: new ObjectId(id), userId: req.user._id },
+      { _id: new mongoose.Types.ObjectId(id), userId: req.user._id },
       { $set: { name: folderName } },
     );
     if (!folder) {

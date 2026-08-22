@@ -24,11 +24,9 @@ const UserProfile = () => {
   }, []);
 
   return (
-    <div className=" bg-white ">
-      <section className=" mb-30 w-full relative   ">
-        <TopHeader />
-      </section>
-      <div className="max-w-6xl mx-auto ">
+    <div className=" bg-white min-h-screen pt-20 px-4 sm:px-6 lg:px-8 pb-10">
+      <TopHeader />
+      <div className="max-w-6xl mx-auto mt-8">
         <section className=" mb-8 ">
           <ProfileHeader />
         </section>

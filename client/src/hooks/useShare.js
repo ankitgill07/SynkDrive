@@ -1,4 +1,5 @@
 import {
+  getListPeopleAccessFileApi,
   shareFileToggleApi,
   shareFileWithEmailInviteApi,
   shareWithLinkPermissionsChangeApi,
@@ -6,8 +7,6 @@ import {
 } from "@/api/shareApi";
 import React, { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
-
-
 
 const useShare = (items) => {
   const [activeTab, setActiveTab] = useState("link");
@@ -19,40 +18,26 @@ const useShare = (items) => {
   const [isLoading, setLoading] = useState(false);
   const [email, setEmail] = useState("");
   const [copied, setCopied] = useState(false);
-
+  const [shareByEmail, setShareByEmail] = useState([]);
 
   const openShareModal = async () => {
     setShowShareModal(true);
     setLoading(true);
+    document.body.style.overflow = "hidden"
     try {
       const result = await shareWithPublicLinkApi(items._id);
-
       if (result?.success) {
-        setShareLink(result.data.shareUrl || "");
-        setLinkEnabled(result.data.linkEnabled || false);
-        setLinkPermission(result.data.linkPermission || "viewer");
+        setShareLink(result.data.shareUrl);
+        setLinkEnabled(result.data.linkEnabled);
+        setLinkPermission(result.data.linkPermission);
       }
+      handleGetPeopleAccessFile()
     } catch (error) {
-      console.error("Failed to load share settings:", error);
+      console.error(error);
     } finally {
       setLoading(false);
     }
   };
-
-  const handleSharePublicLink = async (permission = "viewer") => {
-    try {
-      const result = await shareWithPublicLinkApi(items._id, permission);
-
-      if (result?.success) {
-        setShareLink(result.data.shareUrl);
-        setLinkPermission(result.data.linkPermission);
-        setLinkEnabled(result.data.linkEnabled);
-      }
-    } catch (error) {
-      console.error(error);
-    }
-  };
-
 
   const handleToggle = async () => {
     const previousValue = linkEnabled;
@@ -72,7 +57,6 @@ const useShare = (items) => {
     }
   };
 
-
   const handleChangePermission = async (permission) => {
     try {
       const result = await shareWithLinkPermissionsChangeApi(
@@ -91,19 +75,26 @@ const useShare = (items) => {
   /**
    * Send email invite
    */
-  const handleSendFileWitEmail = async (data) => {
+  const handleSendFileWithEmail = async (data) => {
     try {
       const result = await shareFileWithEmailInviteApi(items._id, data);
-
       console.log(result);
+  
     } catch (error) {
       console.error(error);
     }
   };
 
-  /**
-   * Copy link
-   */
+  const handleGetPeopleAccessFile = async () => {
+    try {
+      const result = await getListPeopleAccessFileApi(items._id);
+      console.log(result);
+              setShareByEmail(result.data)
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
   const handleCopyLink = async () => {
     try {
       await navigator.clipboard.writeText(shareLink);
@@ -123,6 +114,7 @@ const useShare = (items) => {
    */
   const closeShareModal = () => {
     setShowShareModal(false);
+    document.body.style.overflow = "auto"
   };
 
   return {
@@ -139,11 +131,11 @@ const useShare = (items) => {
     setEmail,
     copied,
     isLoading,
-    handleSharePublicLink,
     handleToggle,
     handleChangePermission,
     handleCopyLink,
-    handleSendFileWitEmail,
+    handleSendFileWithEmail,
+    shareByEmail,
   };
 };
 

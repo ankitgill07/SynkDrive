@@ -1,25 +1,40 @@
-import { selectAllTrashData } from "@/lib/RecycleSlice";
+import { selectAllTrashData, deselectAllTrashData } from "@/lib/RecycleSlice";
 import { SelectionCheckbox } from "@/utils/Helpers";
-import React, { useState } from "react";
+import React from "react";
 import { FaSortDown } from "react-icons/fa";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 
 function RecycleSortListLayout() {
-  const [allSelected, setAllSelected] = useState(false);
   const dispatch = useDispatch();
+  const items = useSelector((state) => state.recycleBin.recycleItems);
+  const totalCount = items.length;
+  const selectedCount = items.filter((item) => item.selected).length;
+
+  let checkboxState = false;
+  if (selectedCount > 0) {
+    if (selectedCount === totalCount) {
+      checkboxState = true;
+    } else {
+      checkboxState = "indeterminate";
+    }
+  }
+
   return (
     <div className="bg-white">
-      <div className="grid grid-cols-[1fr_auto_1fr] items-center px-0.5 py-3 border-b border-gray-00 text-sm font-medium font-inter text-gray-500 uppercase tracking-wider">
+      <div className="grid grid-cols-[1fr_1fr] sm:grid-cols-[1fr_auto_1fr] items-center px-0.5 py-3 border-b border-gray-100 text-sm font-medium font-inter text-gray-500 uppercase tracking-wider">
         <div className="flex items-center">
           <div className="flex group  shrink-0 items-center justify-center w-8 mr-2">
             <button
               type="button"
               onClick={() => {
-                dispatch(selectAllTrashData());
-                setAllSelected(!allSelected);
+                if (selectedCount === totalCount && totalCount > 0) {
+                  dispatch(deselectAllTrashData());
+                } else {
+                  dispatch(selectAllTrashData());
+                }
               }}
             >
-              {SelectionCheckbox({ isSelected: allSelected })}
+              {SelectionCheckbox({ isSelected: checkboxState })}
             </button>
           </div>
 
@@ -30,7 +45,7 @@ function RecycleSortListLayout() {
             Name <FaSortDown className="ml-1 mb-0.5" />
           </div>
         </div>
-        <div className="w-[100px] text-center">Deleted by</div>
+        <div className="hidden sm:block w-[100px] text-center">Days Left</div>
 
         <div
           onClick={() => setSortedByType("updatedAt")}

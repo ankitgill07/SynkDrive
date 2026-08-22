@@ -28,10 +28,17 @@ export const AuthProvider = ({ children }) => {
     }
   };
   const logout = async () => {
-    const result = await userLogoutApi();
-    if (result.success) {
-        checkAuthorization()
-      toast.success(result.success);
+    try {
+      const result = await userLogoutApi();
+      if (result.success) {
+        toast.success(result.success);
+      } else if (result.error) {
+        toast.error(result.error);
+      }
+    } catch (error) {
+      console.error("Logout failed:", error);
+    } finally {
+      await checkAuthorization();
     }
   };
 
