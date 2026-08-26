@@ -19,14 +19,14 @@ import webhookRouter from "./routers/webhookRouter.js";
 import helmet from "helmet";
 import { eventController } from "./controllers/eventController.js";
 import { getShareWithLink } from "./controllers/shareContoller.js";
+import {startCronJob} from "./cron/index.js"
 import { Limiter } from "./utils/RateLimiter.js";
 import adminRouter from "./routers/adminRouter.js";
-import connetDB from "./db/db.js";
 
-await connetDB();
 const app = express();
 
 
+startCronJob()
 
 app.use(helmet());
 app.use(express.json());
@@ -93,8 +93,5 @@ app.get("/", (req, res) => {
 
 app.use(errorHandler);
 
-app.listen(4000 , () => {
-  console.log("server start prot 4000");
-  
-})
+
 export default app

@@ -23,11 +23,25 @@ import CheckoutPage from "@/Pages/subscriptions/CheckoutPage";
 import SubscriptionLayout from "@/layout/SubscriptionLayout";
 import SubscriptionManagePage from "@/Pages/subscriptions/SubscriptionManagePage";
 import NotFoundPage from "@/Pages/NotFoundPage";
+import TermsOfService from "@/Pages/TermsOfService";
+import PrivacyPolicy from "@/Pages/PrivacyPolicy";
 
 const router = createBrowserRouter([
   {
     path: "/",
     element: <Navigate to="/drive/home" replace />, 
+  },
+  {
+    path: "/terms-of-service",
+    element: <TermsOfService />,
+  },
+  {
+    path: "/privacy-policy",
+    element: <PrivacyPolicy />,
+  },
+  {
+    path: "/trem-service",
+    element: <Navigate to="/terms-of-service" replace />,
   },
   {
     path: "/drive",

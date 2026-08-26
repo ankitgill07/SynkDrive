@@ -140,9 +140,9 @@ function Signup({ setCurrentAuthPage }) {
                   />
                 )}
               />
-              <p className=' font-medium text-black/80 font-inter text-sm ml-1.5 '>I agree to the <span className=' text-[#155DFC] hover:underline'><Link to={'/trem-service'}>
-                Trems of Service
-              </Link></span> and <span className='text-[#155DFC] hover:underline'><Link>
+              <p className=' font-medium text-black/80 font-inter text-sm ml-1.5 '>I agree to the <span className=' text-[#155DFC] hover:underline'><Link to={'/terms-of-service'}>
+                Terms of Service
+              </Link></span> and <span className='text-[#155DFC] hover:underline'><Link to={'/privacy-policy'}>
                 Privacy Policy
               </Link></span></p>
             </label>

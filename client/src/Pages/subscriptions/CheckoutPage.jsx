@@ -172,13 +172,13 @@ export default function CheckoutPage({
             </button>
             <span className="text-sm text-gray-500 leading-relaxed">
               I agree to the{" "}
-              <span className="text-[#155dfc] font-semibold">
+              <a href="/terms-of-service" target="_blank" rel="noopener noreferrer" className="text-[#155dfc] font-semibold hover:underline">
                 Terms of Service
-              </span>{" "}
+              </a>{" "}
               and{" "}
-              <span className="text-[#155dfc] font-semibold">
+              <a href="/privacy-policy" target="_blank" rel="noopener noreferrer" className="text-[#155dfc] font-semibold hover:underline">
                 Privacy Policy
-              </span>
+              </a>
             </span>
           </label>
 
