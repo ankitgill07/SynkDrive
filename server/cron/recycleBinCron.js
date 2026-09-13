@@ -1,59 +1,64 @@
-import cron from "node-cron";
 import Users from "../models/userModel.js";
+
 import Folder from "../models/folderModel.js";
 import File from "../models/fileModel.js";
 import { folderDeleteParmanetly, filesDeletParmanetly } from "../services/recycleBin/index.js";
 
-export const cleanExpiredRecycleBinItemsCron = () => {
+export const processExpiredRecycleBinItems = async () => {
+  const now = new Date();
+
   try {
-    // Run daily at midnight: "0 0 * * *"
-    cron.schedule("0 0 * * *", async () => {
-      const now = new Date();
-      
-      try {
-        const users = await Users.find({}, { _id: 1, restoreFileDays: 1 });
+    const users = await Users.find({}, { _id: 1, restoreFileDays: 1 });
 
-        for (const user of users) {
-          const days = user.restoreFileDays || 30;
-          const thresholdDate = new Date(now.getTime() - days * 24 * 60 * 60 * 1000);
+    for (const user of users) {
+      const days = user.restoreFileDays || 30;
+      const thresholdDate = new Date(now.getTime() - days * 24 * 60 * 60 * 1000);
 
-          // Find root expired folders
-          const expiredFolders = await Folder.find({
-            userId: user._id,
-            isDeleted: true,
-            deletedByParent: false,
-            updatedAt: { $lte: thresholdDate }
-          });
+      // Find root expired folders
+      const expiredFolders = await Folder.find({
+        userId: user._id,
+        isDeleted: true,
+        deletedByParent: false,
+        updatedAt: { $lte: thresholdDate }
+      });
 
-          for (const folder of expiredFolders) {
-            try {
-              await folderDeleteParmanetly(folder._id, user._id);
-            } catch (err) {
-              console.error(`[Recycle Bin Cron] Failed to permanently delete folder ${folder._id}:`, err.message);
-            }
-          }
-
-          // Find root expired files
-          const expiredFiles = await File.find({
-            userId: user._id,
-            isDeleted: true,
-            deletedByParent: false,
-            updatedAt: { $lte: thresholdDate }
-          });
-
-          for (const file of expiredFiles) {
-            try {
-              await filesDeletParmanetly(file._id, user._id);
-            } catch (err) {
-              console.error(`[Recycle Bin Cron] Failed to permanently delete file ${file._id}:`, err.message);
-            }
-          }
+      for (const folder of expiredFolders) {
+        try {
+          await folderDeleteParmanetly(folder._id, user._id);
+        } catch (err) {
+          console.error(`[Recycle Bin Cron] Failed to permanently delete folder ${folder._id}:`, err.message);
         }
-      } catch (error) {
-        console.error("[Recycle Bin Cron] Error executing cleanup:", error.message);
       }
-    });
+
+      // Find root expired files
+      const expiredFiles = await File.find({
+        userId: user._id,
+        isDeleted: true,
+        deletedByParent: false,
+        updatedAt: { $lte: thresholdDate }
+      });
+
+      for (const file of expiredFiles) {
+        try {
+          await filesDeletParmanetly(file._id, user._id);
+        } catch (err) {
+          console.error(`[Recycle Bin Cron] Failed to permanently delete file ${file._id}:`, err.message);
+        }
+      }
+    }
+  } catch (error) {
+    console.error("[Recycle Bin Cron] Error executing cleanup:", error.message);
+  }
+};
+
+export const cleanExpiredRecycleBinItemsCron = async () => {
+  try {
+    const cronModule = await import("node-cron");
+    const cron = cronModule.default || cronModule;
+    cron.schedule("0 0 * * *", processExpiredRecycleBinItems);
   } catch (error) {
     console.error("Recycle Bin cron initialization failed:", error.message);
   }
 };
+
+

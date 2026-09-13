@@ -28,16 +28,20 @@ export const updateProfile = async (req, res, next) => {
       // Upload to S3
       await s3UploadFile({
         filePath: req.file.path,
+        fileBuffer: req.file.buffer,
         key: s3Key,
         contentType: req.file.mimetype,
       });
 
-      // Delete local temp file
-      try {
-        await fs.promises.unlink(req.file.path);
-      } catch (err) {
-        console.error("Failed to delete local temp file:", err);
+      // Delete local temp file if it exists
+      if (req.file.path) {
+        try {
+          await fs.promises.unlink(req.file.path);
+        } catch (err) {
+          console.error("Failed to delete local temp file:", err);
+        }
       }
+
 
       // Delete old profile image from S3 if it exists
       if (user.picture && user.picture.startsWith("profile-pics/")) {

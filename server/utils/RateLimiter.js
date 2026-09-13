@@ -44,6 +44,61 @@ export const keyGenerators = {
 };
 
 
+class SafeMemoryStore {
+  constructor() {
+    this.hits = new Map();
+    this.localKeys = true;
+  }
+
+  init(options) {
+    this.windowMs = options.windowMs;
+  }
+
+  async get(key) {
+    const now = Date.now();
+    const record = this.hits.get(key);
+    if (!record) return undefined;
+    if (now > record.resetTime) {
+      this.hits.delete(key);
+      return undefined;
+    }
+    return {
+      totalHits: record.totalHits,
+      resetTime: new Date(record.resetTime),
+    };
+  }
+
+  async increment(key) {
+    const now = Date.now();
+    let record = this.hits.get(key);
+    if (!record || now > record.resetTime) {
+      record = {
+        totalHits: 0,
+        resetTime: now + (this.windowMs || 60000),
+      };
+      this.hits.set(key, record);
+    }
+    record.totalHits++;
+    return {
+      totalHits: record.totalHits,
+      resetTime: new Date(record.resetTime),
+    };
+  }
+
+  async decrement(key) {
+    const record = this.hits.get(key);
+    if (record && record.totalHits > 0) record.totalHits--;
+  }
+
+  async resetKey(key) {
+    this.hits.delete(key);
+  }
+
+  async resetAll() {
+    this.hits.clear();
+  }
+}
+
 export const RateLimiter = ({
   windowTimeInMs = _15m,
   limit          = 250,
@@ -56,6 +111,8 @@ export const RateLimiter = ({
     windowMs              : windowTimeInMs,
     limit,
     keyGenerator,
+    store                 : new SafeMemoryStore(),
+    validate              : false,
     skipSuccessfulRequests: skipSuccess,
     skipFailedRequests    : skipFailed,
     standardHeaders       : "draft-7",
@@ -71,6 +128,7 @@ export const RateLimiter = ({
           : null,
       }),
   });
+
 
 
 const makeLimiter = (limit, windowMs, options = {}) =>

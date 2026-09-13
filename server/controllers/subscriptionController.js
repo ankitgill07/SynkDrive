@@ -11,10 +11,31 @@ import redisClient from "../db/redisDB.js";
 import { disableUserService, enableUserService } from "../utils/serviceControl.js";
 import { sendEventToUser } from "./eventController.js";
 
-const razorpay = new Razorpay({
-  key_id: process.env.RAZORPAY_KEY_ID,
-  key_secret: process.env.RAZORPAY_KEY_SECRET,
-});
+let _razorpay = null;
+const getRazorpay = () => {
+  if (!_razorpay) {
+    _razorpay = new Razorpay({
+      key_id: process.env.RAZORPAY_KEY_ID,
+      key_secret: process.env.RAZORPAY_KEY_SECRET,
+    });
+  }
+  return _razorpay;
+};
+
+const razorpay = new Proxy(
+  {},
+  {
+    get(target, prop) {
+      const inst = getRazorpay();
+      const val = inst[prop];
+      if (typeof val === "function") {
+        return val.bind(inst);
+      }
+      return val;
+    },
+  },
+);
+
 
 export const createSubscription = async (req, res, next) => {
   try {

@@ -5,5 +5,9 @@
   "compatibility_flags": [
     "nodejs_compat",
     "nodejs_compat_populate_process_env"
-  ]
+  ],
+  "vars": {
+    "CLOUDFLARE_WORKER": "true"
+  }
 }
+

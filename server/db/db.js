@@ -1,15 +1,39 @@
 import mongoose from "mongoose";
 
+let connectPromise = null;
+
 export default async function connetDB() {
-  try {
-    await mongoose.connect(process.env.DATABASE_URL);
-  } catch (error) {
-    console.error("MongoDB connection failed:", error.message);
-    process.exit(1);
+  if (mongoose.connection.readyState >= 1) {
+    return;
   }
+
+  if (!process.env.DATABASE_URL) {
+    console.warn("DATABASE_URL is not set in environment variables.");
+    return;
+  }
+
+  if (!connectPromise) {
+    connectPromise = mongoose
+      .connect(process.env.DATABASE_URL)
+      .catch((error) => {
+        console.error("MongoDB connection failed:", error.message);
+        throw error;
+      })
+      .finally(() => {
+        connectPromise = null;
+      });
+  }
+
+  return await connectPromise;
 }
 
-process.on("SIGTERM", async () => {
-  await mongoose.disconnect();
-  process.exit(0);
-});
+
+if (typeof process !== "undefined" && typeof process.on === "function") {
+  process.on("SIGTERM", async () => {
+    try {
+      await mongoose.disconnect();
+    } catch {
+      // ignore
+    }
+  });
+}

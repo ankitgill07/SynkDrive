@@ -1,5 +1,18 @@
-import { disableServiceSubscriptionPausedCron } from "./subscriptionCron.js";
-import { cleanExpiredRecycleBinItemsCron } from "./recycleBinCron.js";
+import {
+  disableServiceSubscriptionPausedCron,
+  processExpiredSubscriptions,
+} from "./subscriptionCron.js";
+import {
+  cleanExpiredRecycleBinItemsCron,
+  processExpiredRecycleBinItems,
+} from "./recycleBinCron.js";
+
+export const runCronTasks = async () => {
+  await Promise.allSettled([
+    processExpiredSubscriptions(),
+    processExpiredRecycleBinItems(),
+  ]);
+};
 
 export const startCronJob = () => {
   try {
@@ -9,3 +22,4 @@ export const startCronJob = () => {
     console.error(`cron job failed ${error}`);
   }
 };
+
