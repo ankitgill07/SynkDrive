@@ -8,8 +8,8 @@ jobs:
     env:
       S3_BUCKET_NAME: synkdrive-frontend
       CLOUDFRONT_DISTRIBUTION_ID: E3BZZV9T5KDEER
-      VITE_GOOGLE_CLIENT_ID: 750160779960-7ggoqjduds5ipmrmbmutcvpv3kmsatg2.apps.googleusercontent.com
-      VITE_APP_GOOGLE_API_KEY: AIzaSyB1LTOcjyAPlarMwiDqz8Xq_JDkgbaR2Bs
+      VITE_GOOGLE_CLIENT_ID: .com
+      VITE_APP_GOOGLE_API_KEY: "ppp"
       VITE_APP_RAZORPAY_API_KEY: rzp_test_TDpLabRhAfD6Bj
       VITE_BACKEND_BASE_URL: https://api.synkdrive.in
 
