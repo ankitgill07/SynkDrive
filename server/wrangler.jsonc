@@ -1,6 +1,9 @@
 {
-  "name": "synkdrive-api",
+  "name": "synkdrive",
   "main": "app.js",
   "compatibility_date": "2026-09-13",
-  "compatibility_flags": ["nodejs_compat"]
+  "compatibility_flags": [
+    "nodejs_compat",
+    "nodejs_compat_populate_process_env"
+  ]
 }
