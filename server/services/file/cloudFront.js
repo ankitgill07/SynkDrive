@@ -1,15 +1,20 @@
 import { getSignedUrl } from "@aws-sdk/cloudfront-signer";
-import { readFile } from "fs/promises";
 
 export const cloudfrontSignedUrl = async ({ key, fileName }) => {
+  if (!process.env.CLOUDFRONT_PRIVATE_KEY) {
+    throw new Error("CLOUDFRONT_PRIVATE_KEY is not configured");
+  }
+
   const cloudfrontDistributionDomain = "https://d1tworb3sym6yh.cloudfront.net";
   const contentDisposition = encodeURIComponent(`inline; filename="${fileName}"`);
   const url = `${cloudfrontDistributionDomain}/${key}?response-content-disposition=${contentDisposition}`;
-const decodeValue =  atob(process.env.CLOUDFRONT_PRIVATE_KEY)
 
-  const privateKey = decodeValue;
+  const privateKey = Buffer.from(
+    process.env.CLOUDFRONT_PRIVATE_KEY,
+    "base64",
+  ).toString("utf8");
   const keyPairId = "K2Z1983GBH6CH7";
-  const dateLessThan = "2026-09-09";
+  const dateLessThan = new Date(Date.now() + 60 * 60 * 1000).toISOString();
 
   const signedUrl = getSignedUrl({
     url,       

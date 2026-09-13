@@ -121,92 +121,106 @@ const isCloudflareWorker =
 // Cloudflare Workers entrypoint
 export default {
   async fetch(request, env, ctx) {
-    if (env && typeof env === "object") {
-      for (const [key, value] of Object.entries(env)) {
-        if (typeof value === "string") {
-          process.env[key] = value;
+    try {
+      if (env && typeof env === "object") {
+        for (const [key, value] of Object.entries(env)) {
+          if (typeof value === "string") {
+            process.env[key] = value;
+          }
         }
       }
-    }
 
-    await connetDB();
+      const url = new URL(request.url);
 
-    const url = new URL(request.url);
-    const headers = {};
-    const multiValueHeaders = {};
-    for (const [k, v] of request.headers.entries()) {
-      const lower = k.toLowerCase();
-      headers[lower] = v;
-      multiValueHeaders[lower] = [v];
-    }
-
-    const queryStringParameters = {};
-    const multiValueQueryStringParameters = {};
-    for (const [k, v] of url.searchParams.entries()) {
-      queryStringParameters[k] = v;
-      if (!multiValueQueryStringParameters[k]) {
-        multiValueQueryStringParameters[k] = [];
+      if (url.pathname !== "/") {
+        await connetDB();
       }
-      multiValueQueryStringParameters[k].push(v);
-    }
 
-    let body = null;
-    let isBase64Encoded = false;
-    if (request.method !== "GET" && request.method !== "HEAD") {
-      const arrayBuffer = await request.arrayBuffer();
-      if (arrayBuffer.byteLength > 0) {
-        body = Buffer.from(arrayBuffer).toString("base64");
-        isBase64Encoded = true;
+      const headers = {};
+      const multiValueHeaders = {};
+      for (const [k, v] of request.headers.entries()) {
+        const lower = k.toLowerCase();
+        headers[lower] = v;
+        multiValueHeaders[lower] = [v];
       }
-    }
 
-    const event = {
-      httpMethod: request.method,
-      path: url.pathname,
-      headers,
-      multiValueHeaders,
-      queryStringParameters,
-      multiValueQueryStringParameters,
-      body,
-      isBase64Encoded,
-      requestContext: {
-        http: {
-          method: request.method,
-          path: url.pathname,
+      const queryStringParameters = {};
+      const multiValueQueryStringParameters = {};
+      for (const [k, v] of url.searchParams.entries()) {
+        queryStringParameters[k] = v;
+        if (!multiValueQueryStringParameters[k]) {
+          multiValueQueryStringParameters[k] = [];
+        }
+        multiValueQueryStringParameters[k].push(v);
+      }
+
+      let body = null;
+      let isBase64Encoded = false;
+      if (request.method !== "GET" && request.method !== "HEAD") {
+        const arrayBuffer = await request.arrayBuffer();
+        if (arrayBuffer.byteLength > 0) {
+          body = Buffer.from(arrayBuffer).toString("base64");
+          isBase64Encoded = true;
+        }
+      }
+
+      const event = {
+        httpMethod: request.method,
+        path: url.pathname,
+        headers,
+        multiValueHeaders,
+        queryStringParameters,
+        multiValueQueryStringParameters,
+        body,
+        isBase64Encoded,
+        requestContext: {
+          http: {
+            method: request.method,
+            path: url.pathname,
+          },
         },
-      },
-    };
+      };
 
-    const response = await serverlessHandler(event, ctx || {});
-    console.log("Serverless response:", JSON.stringify(response));
-
+      const response = await serverlessHandler(event, ctx || {});
+      console.log("Serverless response:", JSON.stringify(response));
 
 
-    const respHeaders = new Headers();
-    if (response.multiValueHeaders) {
-      for (const [k, values] of Object.entries(response.multiValueHeaders)) {
-        for (const val of values) {
-          respHeaders.append(k, val);
+
+      const respHeaders = new Headers();
+      if (response.multiValueHeaders) {
+        for (const [k, values] of Object.entries(response.multiValueHeaders)) {
+          for (const val of values) {
+            respHeaders.append(k, val);
+          }
+        }
+      } else if (response.headers) {
+        for (const [k, v] of Object.entries(response.headers)) {
+          if (Array.isArray(v)) {
+            v.forEach((val) => respHeaders.append(k, val));
+          } else if (v !== undefined) {
+            respHeaders.set(k, String(v));
+          }
         }
       }
-    } else if (response.headers) {
-      for (const [k, v] of Object.entries(response.headers)) {
-        if (Array.isArray(v)) {
-          v.forEach((val) => respHeaders.append(k, val));
-        } else if (v !== undefined) {
-          respHeaders.set(k, String(v));
-        }
-      }
+
+      const respBody = response.isBase64Encoded
+        ? Buffer.from(response.body, "base64")
+        : response.body;
+
+      return new Response(respBody, {
+        status: response.statusCode,
+        headers: respHeaders,
+      });
+    } catch (error) {
+      console.error("Worker request failed:", error);
+      return Response.json(
+        {
+          success: false,
+          message: error.message || "Worker request failed",
+        },
+        { status: 500 },
+      );
     }
-
-    const respBody = response.isBase64Encoded
-      ? Buffer.from(response.body, "base64")
-      : response.body;
-
-    return new Response(respBody, {
-      status: response.statusCode,
-      headers: respHeaders,
-    });
   },
 
   async scheduled(event, env, ctx) {
