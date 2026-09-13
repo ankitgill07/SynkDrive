@@ -21,6 +21,6 @@ export const handleRazorpayWebhookEvents = async (event, webhookData) => {
       break;
 
     default:
-      console.log("Unhandled event:", event);
+      break;
   }
 };

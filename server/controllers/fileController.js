@@ -1,6 +1,6 @@
 import path from "path";
 import File from "../models/fileModel.js";
-import Folder from "../models/folderModel.js ";
+import Folder from "../models/folderModel.js";
 import mongoose from "mongoose";
 import { getFolderSize, getMimeType } from "../utils/helperUtil.js";
 import { softDeleteFile } from "../services/recycleBin/index.js";

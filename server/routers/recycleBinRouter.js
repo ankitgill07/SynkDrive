@@ -18,16 +18,16 @@ router.get("/", Limiter.recycleGet(), getRecyleBinData);
 
 router.patch("/bulk/restore", Limiter.restoreBulk(), bulkRestoreData);
 
-router.patch("/restore/{:id}", Limiter.restoreSingle(), restoreData);
+router.patch("/restore/:id", Limiter.restoreSingle(), restoreData);
 
 router.patch(
-  "/restore/folder/{:id}",
+  "/restore/folder/:id",
   RateLimiter({ windowTimeInMs: 5 * _1m, limit: 15 }),
   restoreFolder,
 );
 
 router.delete(
-  "/delete/folder/{:folderId}",
+  "/delete/folder/:folderId",
   Limiter.folderDelete(),
   deleteFolderParmanetly,
 );
@@ -39,13 +39,13 @@ router.delete(
 );
 
 router.delete(
-  "/delete/file/{:id}",
+  "/delete/file/:id",
   Limiter.filePermanentDelete(),
   deletedPermanetly,
 );
 
 router.get(
-  "/{:folderId}",
+  "/:folderId",
   RateLimiter({ windowTimeInMs: _1m, limit: 10 }),
   getRecyleDataById,
 );

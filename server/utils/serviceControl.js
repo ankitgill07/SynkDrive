@@ -40,10 +40,6 @@ export const disableUserService = async (
       console.warn("Failed to clean up excess sessions:", err.message);
     }
 
-    console.log(
-      `[Service Control] Disabled service for user ${userId}: ${reason}`,
-    );
-
     return {
       success: true,
       userId,
@@ -82,10 +78,6 @@ export const enableUserService = async (
     user.restoreFileDays = plan.restoreFileDays;
 
     await user.save();
-
-    console.log(
-      `[Service Control] Enabled service for user ${userId}: ${reason}`,
-    );
 
     return {
       success: true,

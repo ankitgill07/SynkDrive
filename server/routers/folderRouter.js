@@ -10,17 +10,19 @@ import { Limiter } from "../utils/RateLimiter.js";
 
 const router = express.Router();
 
-router.post("/{:id}", Limiter.folderCreate(), createNewFolder);
+router.post("/", Limiter.folderCreate(), createNewFolder);
+router.post("/:id", Limiter.folderCreate(), createNewFolder);
 
-router.get("/{:id}", Limiter.folderGet(), getAllFolders);
+router.get("/", Limiter.folderGet(), getAllFolders);
+router.get("/:id", Limiter.folderGet(), getAllFolders);
 
 router.patch(
-  "/{:id}",
+  "/:id",
   Limiter.folderRename(),
   vaildldMidleware,
   renameFolderName,
 );
 
-router.put("/{:id}", Limiter.folderDelete(), softDeleteFolderData);
+router.put("/:id", Limiter.folderDelete(), softDeleteFolderData);
 
 export default router;

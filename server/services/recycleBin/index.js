@@ -1,6 +1,6 @@
 import File from "../../models/fileModel.js";
 import { getFolderSize } from "../../utils/helperUtil.js";
-import Folder from "../../models/folderModel.js ";
+import Folder from "../../models/folderModel.js";
 import { s3DeleteObjects, s3DeletePreSingedUrl } from "../file/s3Servies.js";
 import mongoose from "mongoose";
 
@@ -97,10 +97,6 @@ export const folderDeleteParmanetly = async (id, userId) => {
     const { files, folders } = await getFolderItems(id);
 
     const totalSize = files.reduce((acc, file) => acc + file.size, 0);
-    console.log("folder:", folder);
-    console.log("files found:", files.length);
-    console.log("totalSize to subtract:", totalSize);
-    console.log("starting getFolderSize from id:", id);
 
     const Keys = files.map(({ _id, extension }) => ({
       Key: `${_id}${extension}`,

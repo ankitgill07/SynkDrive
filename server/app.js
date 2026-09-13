@@ -19,14 +19,17 @@ import webhookRouter from "./routers/webhookRouter.js";
 import helmet from "helmet";
 import { eventController } from "./controllers/eventController.js";
 import { getShareWithLink } from "./controllers/shareContoller.js";
-import {startCronJob} from "./cron/index.js"
+import { startCronJob } from "./cron/index.js";
 import { Limiter } from "./utils/RateLimiter.js";
 import adminRouter from "./routers/adminRouter.js";
+import connetDB from "./db/db.js";
 
 const app = express();
 
+await connetDB();
 
-startCronJob()
+
+startCronJob();
 
 app.use(helmet());
 app.use(express.json());
@@ -36,6 +39,10 @@ app.use("/uploads", express.static("uploads"));
 
 const allowedOrigins = [
   "http://localhost:5173",
+  "http://localhost:5174",
+  "http://localhost:3000",
+  "http://127.0.0.1:5173",
+  "http://127.0.0.1:5174",
   process.env.FRONTEND_URL,
 ].filter(Boolean);
 
@@ -51,8 +58,6 @@ app.use(
     credentials: true,
   }),
 );
-
-
 
 app.use("/auth", authRouter);
 
@@ -91,7 +96,17 @@ app.get("/", (req, res) => {
   );
 });
 
+app.use((req, res) => {
+  return res.status(StatusCodes.NOT_FOUND).json({ error: "Route not found" });
+});
+
 app.use(errorHandler);
 
+const PORT = process.env.PORT || 4000;
 
-export default app
+if (!process.env.AWS_LAMBDA_FUNCTION_NAME && process.env.NODE_ENV !== "test") {
+  await connetDB();
+  app.listen(PORT);
+}
+
+export default app;

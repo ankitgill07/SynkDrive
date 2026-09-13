@@ -92,7 +92,7 @@ export const createUser = async ({
       );
     });
   } catch (error) {
-    console.log(error);
+    throw error;
   } finally {
     session.endSession();
   }

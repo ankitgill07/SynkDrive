@@ -18,48 +18,48 @@ import { Limiter } from "../utils/RateLimiter.js";
 const router = express.Router();
 
 router.post(
-  "/files/{:fileId}/link",
+  "/files/:fileId/link",
   Limiter.fileShareLink(),
   shareWithPublicLink,
 );
 
 router.patch(
-  "/file/{:fileId}/link/toggle",
+  "/file/:fileId/link/toggle",
   Limiter.fileShareToggle(),
   shareFileToggle,
 );
 
 router.patch(
-  "/file/{:fileId}/link/permissions",
+  "/file/:fileId/link/permissions",
   Limiter.fileSharePermission(),
   shareWithLinkPermissionChange,
 );
 
 router.get(
-  "/public/file/{:fileId}",
+  "/public/file/:fileId",
   Limiter.filePublicAccess(),
   getShareWithLink,
 );
 
-router.get("/file/{:shareId}", Limiter.filePublicAccess(), getShareFileInfo);
+router.get("/file/:shareId", Limiter.filePublicAccess(), getShareFileInfo);
 
 router.post(
-  "/file/{:fileId}/email/invite",
+  "/file/:fileId/email/invite",
   Limiter.fileEmailInvite(),
   shareInviteWithEmail,
 );
 
 router.get(
-  "/files/{:fileId}/email-share",
+  "/files/:fileId/email-share",
   Limiter.fileShareEmail(),
   validateEmailShare,
   getShareFileWithEmailData,
 );
 
-router.get("/files/{:fileId}/people", getListPeopleAccessFile);
+router.get("/files/:fileId/people", getListPeopleAccessFile);
 
 router.get(
-  "/files/{:fileId}/stream",
+  "/files/:fileId/stream",
   Limiter.fileStream(),
   validateEmailShare,
   streamSharedFile,
@@ -67,6 +67,6 @@ router.get(
 
 router.get('/files/dashboard' , getSharedFileDashboard)
 
-router.get("/files/{:email}/user" , getUsertoShareFilewithEmail)
+router.get("/files/:email/user" , getUsertoShareFilewithEmail)
 
 export default router;

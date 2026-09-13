@@ -1,5 +1,5 @@
 import File from "../models/fileModel.js";
-import Folder from "../models/folderModel.js ";
+import Folder from "../models/folderModel.js";
 import mongoose from "mongoose";
 
 

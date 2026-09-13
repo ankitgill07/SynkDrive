@@ -211,7 +211,6 @@ export const getAllSessions = async (req, res, next) => {
       `@userId:{${userId}}`,
     );
     const all = session.documents.map(({ value }) => value);
-    console.log(all);
     res.json(all);
   } catch (error) {
     next(error);
@@ -262,30 +261,114 @@ export const deleteAccountPermanetly = async (req, res, next) => {
   try {
     const userId = req.user._id;
     if (!userId) {
-      return errorResponse(res, StatusCodes.NOT_FOUND, "user not found");
+      return errorResponse(res, StatusCodes.NOT_FOUND, "User not found");
     }
+    const { sid } = req.signedCookies;
     const user = await Users.findById(userId);
+    if (!user) {
+      return errorResponse(res, StatusCodes.NOT_FOUND, "User not found");
+    }
+
+    // 1. Collect all files to delete from S3
     const files = await File.find({ userId: userId });
-    await Folder.deleteMany({ userId: userId });
-    const Keys = files.map(({ _id, extension }) => ({
-      Key: `${_id}${extension}`,
-    }));
-    if (user && user.picture && user.picture.startsWith("profile-pics/")) {
+    const Keys = files
+      .filter((f) => f._id && f.extension)
+      .map(({ _id, extension }) => ({
+        Key: `${_id}${extension}`,
+      }));
+
+    if (user.picture && user.picture.startsWith("profile-pics/")) {
       Keys.push({ Key: user.picture });
     }
+
+    // 2. Delete S3 objects safely in batches of 1000
     if (Keys.length > 0) {
-      await s3DeleteObjects({ Keys });
+      for (let i = 0; i < Keys.length; i += 1000) {
+        const chunk = Keys.slice(i, i + 1000);
+        try {
+          await s3DeleteObjects({ Keys: chunk });
+        } catch (err) {
+          // Continue even if S3 delete fails to ensure account is deleted
+        }
+      }
     }
-    await File.deleteMany({ _id: { $in: files.map(({ _id }) => _id) } });
+
+    // 3. Delete user folders and files from MongoDB
+    await Folder.deleteMany({ userId: userId });
+    await File.deleteMany({ userId: userId });
     await Subscription.deleteMany({ userId: userId });
-    const sessions = await redisClient.ft.search(
-      "userIdx",
-      `@userId:{${userId}}`,
-    );
-    for (const { id } of sessions.documents) {
-      await redisClient.del(id);
+
+    // Clean up email shares & link shares
+    try {
+      const EmailShareModule = await import("../models/emailShareModal.js").catch(() => null);
+      if (EmailShareModule?.default) {
+        await EmailShareModule.default.deleteMany({
+          $or: [{ sharedBy: userId }, { "sharedWith.userId": userId }],
+        });
+      }
+    } catch (err) {}
+
+    try {
+      const LinkShareModule = await import("../models/linkShareModel.js").catch(() => null);
+      if (LinkShareModule?.default) {
+        await LinkShareModule.default.deleteMany({ sharedBy: userId });
+      }
+    } catch (err) {}
+
+    try {
+      const OTPModule = await import("../models/otpModel.js").catch(() => null);
+      if (OTPModule?.default && user.email) {
+        await OTPModule.default.deleteMany({ email: user.email });
+      }
+    } catch (err) {}
+
+    // 4. Revoke current session and all Redis sessions
+    if (sid) {
+      try {
+        await redisClient.del(`session:${sid}`);
+      } catch (err) {}
     }
+
+    let sessionsCleaned = false;
+    try {
+      const sessions = await redisClient.ft.search(
+        "userIdx",
+        `@userId:{${userId}}`,
+      );
+      if (sessions && sessions.documents && sessions.documents.length > 0) {
+        for (const { id } of sessions.documents) {
+          await redisClient.del(id);
+        }
+        sessionsCleaned = true;
+      }
+    } catch (err) {}
+
+    // SCAN fallback if search index is not initialized or failed
+    if (!sessionsCleaned) {
+      try {
+        let cursor = 0;
+        do {
+          const result = await redisClient.scan(cursor, {
+            MATCH: "session:*",
+            COUNT: 100,
+          });
+          cursor = result.cursor;
+          for (const key of result.keys) {
+            try {
+              const sessionData = await redisClient.json.get(key);
+              if (sessionData && String(sessionData.userId) === String(userId)) {
+                await redisClient.del(key);
+              }
+            } catch (e) {}
+          }
+        } while (cursor !== 0);
+      } catch (scanErr) {}
+    }
+
+    // 5. Delete the user document
     await Users.findByIdAndDelete(userId);
+
+    // 6. Clear session cookie
     const isProduction = process.env.NODE_ENV === "production";
     res.clearCookie("sid", {
       httpOnly: true,
@@ -293,6 +376,7 @@ export const deleteAccountPermanetly = async (req, res, next) => {
       sameSite: isProduction ? "none" : "lax",
       secure: isProduction,
     });
+
     return res.status(200).json({ success: "Account deleted successfully" });
   } catch (error) {
     next(error);

@@ -1,6 +1,6 @@
 import mongoose from "mongoose";
 import File from "../models/fileModel.js";
-import Folder from "../models/folderModel.js ";
+import Folder from "../models/folderModel.js";
 import { getFolderSize } from "../utils/helperUtil.js";
 import { errorResponse, successResponse } from "../utils/apiResponse.js";
 import { StatusCodes } from "http-status-codes";

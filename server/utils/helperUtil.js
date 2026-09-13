@@ -1,4 +1,4 @@
-import Folder from "../models/folderModel.js ";
+import Folder from "../models/folderModel.js";
 
 const ROOT_STORAGE_ID = null; // or whatever marks the top-level storage node
 
@@ -17,7 +17,6 @@ export async function getFolderSize(parentId, fileSize, options = {}) {
     }
 
     if (skipStorageUsage && isStorageRoot) {
-      // Skip root folder (total storage usage)
       break;
     }
 
@@ -95,4 +94,4 @@ export const getMimeType = (fileName) => {
   };
 
   return mimeTypes[ext] || "application/octet-stream";
-};
+};

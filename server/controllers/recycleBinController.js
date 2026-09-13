@@ -1,6 +1,6 @@
 import File from "../models/fileModel.js";
 import mongoose from "mongoose";
-import Folder from "../models/folderModel.js ";
+import Folder from "../models/folderModel.js";
 import { rm } from "fs/promises";
 import { $ZodObjectJIT } from "zod/v4/core";
 import { getFolderSize } from "../utils/helperUtil.js";

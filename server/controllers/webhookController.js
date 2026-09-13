@@ -45,16 +45,12 @@ export const verifySubscriptionPaymentWithWebhook = async (req, res, next) => {
       status: "pending",
     });
 
-    console.log(`[Webhook] Processing event: ${event} for user: ${userId}`);
-
     const result = await handleRazorpayWebhookEvents(event, webhookBody);
 
     webhookRecord.status = "processed";
     webhookRecord.responseMessage = JSON.stringify(result);
     webhookRecord.processedAt = new Date();
     await webhookRecord.save();
-
-    console.log(`[Webhook] Event processed successfully: ${event}`);
 
     return res.status(StatusCodes.OK).json({
       success: true,

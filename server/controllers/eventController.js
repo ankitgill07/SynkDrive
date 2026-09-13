@@ -16,15 +16,9 @@ export const eventController = (req, res) => {
   const newClient = { id: clientId, userId, res };
 
   clients.push(newClient);
-  console.log(
-    `User ${userId} - [${clientId}] connected via SSE. Total clients: ${clients.length}`,
-  );
 
   req.on("close", () => {
     clients = clients.filter((c) => c.id !== clientId);
-    console.log(
-      `User ${userId} - [${clientId}] disconnected. Total clients: ${clients.length}`,
-    );
   });
 };
 

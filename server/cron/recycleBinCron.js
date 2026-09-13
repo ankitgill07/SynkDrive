@@ -8,7 +8,6 @@ export const cleanExpiredRecycleBinItemsCron = () => {
   try {
     // Run daily at midnight: "0 0 * * *"
     cron.schedule("0 0 * * *", async () => {
-      console.log("[Recycle Bin Cron] Starting cleanup job...");
       const now = new Date();
       
       try {
@@ -27,7 +26,6 @@ export const cleanExpiredRecycleBinItemsCron = () => {
           });
 
           for (const folder of expiredFolders) {
-            console.log(`[Recycle Bin Cron] Permanently deleting expired folder: ${folder.name} (${folder._id}) for user ${user._id}`);
             try {
               await folderDeleteParmanetly(folder._id, user._id);
             } catch (err) {
@@ -44,7 +42,6 @@ export const cleanExpiredRecycleBinItemsCron = () => {
           });
 
           for (const file of expiredFiles) {
-            console.log(`[Recycle Bin Cron] Permanently deleting expired file: ${file.name} (${file._id}) for user ${user._id}`);
             try {
               await filesDeletParmanetly(file._id, user._id);
             } catch (err) {
@@ -55,7 +52,6 @@ export const cleanExpiredRecycleBinItemsCron = () => {
       } catch (error) {
         console.error("[Recycle Bin Cron] Error executing cleanup:", error.message);
       }
-      console.log("[Recycle Bin Cron] Finished cleanup job.");
     });
   } catch (error) {
     console.error("Recycle Bin cron initialization failed:", error.message);

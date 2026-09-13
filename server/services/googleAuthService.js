@@ -18,6 +18,6 @@ export async function googleAuth(code) {
 
     return payload;
   } catch (error) {
-    console.log(error);
+    throw error;
   }
 }
