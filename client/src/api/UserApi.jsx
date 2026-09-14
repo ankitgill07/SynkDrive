@@ -9,7 +9,7 @@ export const updatedProfileApi = async (formData) => {
     });
     return response.data;
   } catch (error) {
-    return error.response.data;
+    return error.response?.data || { error: error.message };
   }
 };
 
@@ -18,7 +18,7 @@ export const userLogoutApi = async () => {
     const response = await axiosInstance.post("/user/logout");
     return response.data;
   } catch (error) {
-    return error.response.data;
+    return error.response?.data || { error: error.message };
   }
 };
 
@@ -27,7 +27,7 @@ export const disableAccountApi = async () => {
     const response = await axiosInstance.post("/user/disable");
     return response.data;
   } catch (error) {
-    return error.response.data;
+    return error.response?.data || { error: error.message };
   }
 };
 
@@ -38,7 +38,7 @@ export const setPasswordApi = async (password) => {
     });
     return response.data;
   } catch (error) {
-    return error.response.data;
+    return error.response?.data || { error: error.message };
   }
 };
 
@@ -50,7 +50,7 @@ export const updatePasswordApi = async (data) => {
     });
     return response.data;
   } catch (error) {
-    return error.response.data;
+    return error.response?.data || { error: error.message };
   }
 };
 
@@ -59,7 +59,7 @@ export const getUserProfileApi = async () => {
     const response = await axiosInstance.get("/user/profile");
     return response.data;
   } catch (error) {
-    return error.response.data;
+    return error.response?.data || { error: error.message };
   }
 };
 
@@ -68,7 +68,7 @@ export const logoutForAllDeviceApi = async () => {
     const response = await axiosInstance.delete("/user/all-device-logout");
     return response.data;
   } catch (error) {
-    return error.response.data;
+    return error.response?.data || { error: error.message };
   }
 };
 
@@ -77,7 +77,7 @@ export const logoutDevicesBySidApi = async (sid) => {
     const response = await axiosInstance.delete(`/user/session/${sid}`);
     return response.data;
   } catch (error) {
-    return error.response.data;
+    return error.response?.data || { error: error.message };
   }
 };
 
@@ -86,6 +86,6 @@ export const deleteAccountPermanentlyApi = async () => {
     const response = await axiosInstance.delete("/user/account-deleted");
     return response.data;
   } catch (error) {
-    return error.response.data;
+    return error.response?.data || { error: error.message };
   }
 };
