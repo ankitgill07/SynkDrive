@@ -20,7 +20,7 @@ export const sendOtpServService = async (email) => {
   `;
 
   await resend.emails.send({
-    from: "SynkDive <no-reply@hirepath.store>",
+    from: "SynkDive <no-reply@synkdrive.in>",
     to: email,
     subject: "SynkDive OTP",
     html,

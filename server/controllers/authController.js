@@ -18,6 +18,8 @@ import Folder from "../models/folderModel.js";
 import { errorResponse, successResponse } from "../utils/apiResponse.js";
 import { StatusCodes } from "http-status-codes";
 import { UAParser } from "ua-parser-js";
+import Subscription from "../models/subscriptionModal.js";
+
 
 export const userRegister = async (req, res, next) => {
   const { success, data, error } = registerValidate.safeParse(req.body);
@@ -48,7 +50,7 @@ try{
     );
   }
 
-  await OTP.deleteOne();
+  await OTP.deleteOne({ _id: optRecord._id });
 
 
     const userId = new mongoose.Types.ObjectId();
@@ -63,7 +65,8 @@ try{
 
 export const userLogin = async (req, res, next) => {
   const { success, data, error } = loginValidate.safeParse(req.body);
-
+      console.log(data);
+      
   if (!success) {
     return res.status(403).json({ error: error.issues });
   }
@@ -104,7 +107,6 @@ export const userLogin = async (req, res, next) => {
   }
 };
 
-import Subscription from "../models/subscriptionModal.js";
 
 export const userInfoData = async (req, res) => {
   const user = req.user;
@@ -163,6 +165,7 @@ export const userInfoData = async (req, res) => {
 export const sendVerificationCode = async (req, res, next) => {
   const { email } = req.body;
   try {
+      console.log(email);
     const user = await Users.findOne({ email });
     if (user) {
       return res.status(401).json({ error: "Email  already exists" });

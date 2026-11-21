@@ -25,6 +25,7 @@ const auditLogSchema = new mongoose.Schema(
   },
   {
     timestamps: true,
+    bufferCommands: false,
   },
 );
 

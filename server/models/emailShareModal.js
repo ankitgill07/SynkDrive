@@ -45,6 +45,7 @@ const emailShareSchema = new mongoose.Schema(
   },
   {
     timestamps: true,
+    bufferCommands: false,
   },
 );
 

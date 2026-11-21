@@ -45,6 +45,7 @@ const fileSchema = mongoose.Schema(
   },
   {
     timestamps: true,
+    bufferCommands: false,
   },
 );
 

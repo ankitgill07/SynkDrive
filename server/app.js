@@ -25,7 +25,9 @@ import { getShareWithLink } from "./controllers/shareContoller.js";
 import { runCronTasks, startCronJob } from "./cron/index.js";
 import { Limiter } from "./utils/RateLimiter.js";
 import adminRouter from "./routers/adminRouter.js";
-import connetDB from "./db/db.js";
+import connetDB, { connectDBMiddleware } from "./db/db.js";
+
+
 const app = express();
 
 app.use(helmet());
@@ -41,7 +43,6 @@ const allowedOrigins = [
   "https://www.synkdrive.in",
   process.env.FRONTEND_URL,
 ].filter(Boolean);
-
 app.use(
   cors({
     origin: (origin, callback) => {
@@ -54,6 +55,19 @@ app.use(
     credentials: true,
   }),
 );
+
+// Health check — no DB needed
+app.get("/", (req, res) => {
+  return res.status(200).json({
+    success: true,
+    message: "SynkDrive API working",
+  });
+});
+
+// ─── DB Connection Middleware ─────────────────────────────────────────────────
+// Applied GLOBALLY to all routes below. This guarantees MongoDB is connected
+// before ANY route handler runs — works in both server and serverless/Worker mode.
+app.use(connectDBMiddleware);
 
 // Routes
 app.use("/auth", authRouter);
@@ -76,14 +90,6 @@ app.use("/subscription", checkAuth, subscriptionRouter);
 app.use("/webhook", webhookRouter);
 app.use("/events", eventController);
 
-// Health check
-app.get("/", (req, res) => {
-  return res.status(200).json({
-    success: true,
-    message: "SynkDrive API working in production",
-  });
-});
-
 // 404
 app.use((req, res) => {
   return res.status(404).json({
@@ -95,5 +101,22 @@ app.use((req, res) => {
 
 // Error handler
 app.use(errorHandler);
+
+
+// Start the server (only in non-worker/non-serverless mode)
+// In worker.js (Cloudflare), the app is imported and used differently.
+if (!process.env.CLOUDFLARE_WORKER) {
+  connetDB()
+    .then(() => {
+      startCronJob();
+      app.listen(4000, () => {
+        console.log("Server started on port 4000");
+      });
+    })
+    .catch((error) => {
+      console.error("Failed to start server:", error.message);
+      process.exit(1);
+    });
+}
 
 export default app;

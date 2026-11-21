@@ -37,6 +37,7 @@ const linkShareSchema = new mongoose.Schema(
   },
   {
     timestamps: true,
+    bufferCommands: false,
   },
 );
 

@@ -63,6 +63,7 @@ const subscriptionSchema = new mongoose.Schema(
   {
     strict: "throw",
     timestamps: true,
+    bufferCommands: false,
   },
 );
 

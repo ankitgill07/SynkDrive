@@ -3,6 +3,7 @@
   "scripts": {
     "dev": "node --watch app.js",
     "start": "NODE_ENV=production node app.js",
+    "test": "node --test",
     "build": "npm i"
   },
   "dependencies": {

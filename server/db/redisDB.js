@@ -2,6 +2,46 @@ import { createClient } from "redis";
 
 let client = null;
 let connectPromise = null;
+let userIndexPromise = null;
+
+export async function ensureUserIndex(redis) {
+  if (!userIndexPromise) {
+    userIndexPromise = (async () => {
+      try {
+        await redis.ft.info("userIdx");
+      } catch (error) {
+        const message = error.message || "";
+        const isMissingIndex =
+          message.includes("SEARCH_INDEX_NOT_FOUND") ||
+          message.toLowerCase().includes("unknown index") ||
+          message.toLowerCase().includes("index not found");
+
+        if (!isMissingIndex) throw error;
+
+        await redis.ft.create(
+          "userIdx",
+          {
+            "$.userId": {
+              type: "TAG",
+              AS: "userId",
+            },
+          },
+          {
+            ON: "JSON",
+            PREFIX: "session:",
+          },
+        );
+        console.log("Redis search index userIdx created.");
+      }
+    })().catch((error) => {
+      // Let the next request retry if Redis was temporarily unavailable.
+      userIndexPromise = null;
+      throw error;
+    });
+  }
+
+  await userIndexPromise;
+}
 
 async function getClient() {
   if (!client) {
@@ -39,6 +79,8 @@ async function getClient() {
     }
     await connectPromise;
   }
+
+  await ensureUserIndex(client);
 
   return client;
 }
